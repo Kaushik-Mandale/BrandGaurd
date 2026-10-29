@@ -1,0 +1,63 @@
+[
+  {
+    "title": "01 Clean post",
+    "text": "Fuel your afternoon with a FitFuel Classic protein bar. Every bar has 20g of plant-based protein made from peas and brown rice. Available in Chocolate, Peanut Butter and Almond.",
+    "expected": []
+  },
+  {
+    "title": "02 Banned terms and punctuation",
+    "text": "Our miracle protein bars are the perfect detox snack! Guaranteed results in 7 days. Try beast mode today!!",
+    "expected": [
+      {"type": "terminology", "text": "miracle"},
+      {"type": "terminology", "text": "detox"},
+      {"type": "terminology", "text": "Guaranteed results"},
+      {"type": "terminology", "text": "beast mode"},
+      {"type": "regex", "text": "!!"}
+    ]
+  },
+  {
+    "title": "03 Wrong terminology",
+    "text": "Fit Fuel energy bars are loved by our users. Vegan-friendly and delicious, they are the best diet bars around.",
+    "expected": [
+      {"type": "terminology", "text": "Fit Fuel"},
+      {"type": "terminology", "text": "energy bars"},
+      {"type": "terminology", "text": "users"},
+      {"type": "terminology", "text": "Vegan-friendly"},
+      {"type": "terminology", "text": "diet bars"}
+    ]
+  },
+  {
+    "title": "04 Formatting (dates, prices, percent)",
+    "text": "Our sale starts 3/12/2026 and ends March 20, 2026. Pay Rs 199 and get 20 % off your first order.",
+    "expected": [
+      {"type": "number_date", "text": "3/12/2026"},
+      {"type": "number_date", "text": "March 20, 2026"},
+      {"type": "number_date", "text": "Rs 199"},
+      {"type": "number_date", "text": "20 %"}
+    ]
+  },
+  {
+    "title": "05 Missing health disclaimer",
+    "text": "Support your muscle recovery and boost your immunity with FitFuel protein bars.",
+    "expected": [
+      {"type": "claim", "text": "missing disclaimer"},
+      {"type": "claim", "text": "boost your immunity (unverifiable, needs Step 4)"}
+    ]
+  },
+  {
+    "title": "06 Wrong facts (needs Step 4)",
+    "text": "FitFuel bars have 30g of protein and zero sugar. Way better than Brand X bars.",
+    "expected": [
+      {"type": "claim", "text": "30g of protein (approved: 20g)"},
+      {"type": "claim", "text": "zero sugar (approved: 4g)"},
+      {"type": "claim", "text": "competitor comparison"}
+    ]
+  },
+  {
+    "title": "07 Bad tone (needs Step 4)",
+    "text": "You will be a loser if you skip your protein. Buy now or regret it forever.",
+    "expected": [
+      {"type": "tone", "text": "shaming / fear language"}
+    ]
+  }
+]

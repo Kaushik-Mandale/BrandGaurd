@@ -1,0 +1,136 @@
+{
+  "precision": 0.96,
+  "recall": 0.8571428571428571,
+  "f1": 0.9056603773584904,
+  "tp": 24,
+  "fp": 1,
+  "fn": 4,
+  "clean_posts": 3,
+  "clean_posts_flagged": 0,
+  "fix_coverage": 1.0,
+  "by_type": {
+    "terminology": {
+      "tp": 11,
+      "fp": 0,
+      "fn": 0
+    },
+    "regex": {
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    "number_date": {
+      "tp": 5,
+      "fp": 0,
+      "fn": 0
+    },
+    "claim": {
+      "tp": 7,
+      "fp": 1,
+      "fn": 2
+    },
+    "tone": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 2
+    }
+  },
+  "details": [
+    {
+      "title": "E01 clean: supported facts",
+      "failed": false,
+      "missed": [],
+      "false_positives": []
+    },
+    {
+      "title": "E02 clean: flavours and delivery",
+      "failed": false,
+      "missed": [],
+      "false_positives": []
+    },
+    {
+      "title": "E03 clean: gluten-free and sugar",
+      "failed": false,
+      "missed": [],
+      "false_positives": []
+    },
+    {
+      "title": "E04 banned terms and punctuation",
+      "failed": false,
+      "missed": [],
+      "false_positives": []
+    },
+    {
+      "title": "E05 wrong terminology",
+      "failed": false,
+      "missed": [],
+      "false_positives": []
+    },
+    {
+      "title": "E06 formatting",
+      "failed": false,
+      "missed": [],
+      "false_positives": []
+    },
+    {
+      "title": "E07 missing disclaimer",
+      "failed": false,
+      "missed": [],
+      "false_positives": [
+        {
+          "type": "claim",
+          "text": "Support your muscle recovery",
+          "message": "Not found in approved brand information: No provided chunk mentions muscle recovery support"
+        }
+      ]
+    },
+    {
+      "title": "E08 wrong numbers",
+      "failed": false,
+      "missed": [],
+      "false_positives": []
+    },
+    {
+      "title": "E09 competitor comparison",
+      "failed": false,
+      "missed": [],
+      "false_positives": []
+    },
+    {
+      "title": "E10 bad tone",
+      "failed": false,
+      "missed": [
+        {
+          "type": "tone",
+          "contains": "loser"
+        },
+        {
+          "type": "tone",
+          "contains": "regret"
+        }
+      ],
+      "false_positives": []
+    },
+    {
+      "title": "E11 disclaimer present, unverified benefit",
+      "failed": false,
+      "missed": [],
+      "false_positives": []
+    },
+    {
+      "title": "E12 mixed problems",
+      "failed": false,
+      "missed": [
+        {
+          "type": "claim",
+          "contains": "immunity"
+        },
+        {
+          "type": "claim",
+          "contains": "30g"
+        }
+      ],
+      "false_positives": []
+    }
+  ]
+}

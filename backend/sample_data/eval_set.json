@@ -1,0 +1,66 @@
+[
+  {"title": "E01 clean: supported facts",
+   "text": "Fuel your afternoon with a FitFuel Classic protein bar. Every bar has 20g of plant-based protein made from peas and brown rice, and it is free from palm oil.",
+   "expected": []},
+  {"title": "E02 clean: flavours and delivery",
+   "text": "Our members love the three flavours: Chocolate, Peanut Butter and Almond. Enjoy free delivery on orders above Rs. 499.00.",
+   "expected": []},
+  {"title": "E03 clean: gluten-free and sugar",
+   "text": "Choose gluten-free protein bars with 4g of sugar per bar, made in a gluten-free facility.",
+   "expected": []},
+  {"title": "E04 banned terms and punctuation",
+   "text": "Our miracle protein bars are the perfect detox snack! Guaranteed results in 7 days. Try beast mode today!!",
+   "expected": [
+     {"type": "terminology", "contains": "miracle"},
+     {"type": "terminology", "contains": "detox"},
+     {"type": "terminology", "contains": "guaranteed results"},
+     {"type": "terminology", "contains": "beast mode"},
+     {"type": "regex", "contains": "!!"}]},
+  {"title": "E05 wrong terminology",
+   "text": "Fit Fuel energy bars are loved by our users. Vegan-friendly and delicious, they are the best diet bars around.",
+   "expected": [
+     {"type": "terminology", "contains": "fit fuel"},
+     {"type": "terminology", "contains": "energy bars"},
+     {"type": "terminology", "contains": "users"},
+     {"type": "terminology", "contains": "vegan-friendly"},
+     {"type": "terminology", "contains": "diet bars"}]},
+  {"title": "E06 formatting",
+   "text": "Our sale starts 3/12/2026 and ends March 20, 2026. Pay Rs 199 and get 20 % off your first order.",
+   "expected": [
+     {"type": "number_date", "contains": "3/12/2026"},
+     {"type": "number_date", "contains": "march 20, 2026"},
+     {"type": "number_date", "contains": "rs 199"},
+     {"type": "number_date", "contains": "20 %"}]},
+  {"title": "E07 missing disclaimer",
+   "text": "Support your muscle recovery and boost your immunity with FitFuel protein bars.",
+   "expected": [
+     {"type": "claim", "contains": "disclaimer"},
+     {"type": "claim", "contains": "immunity"}]},
+  {"title": "E08 wrong numbers",
+   "text": "Each FitFuel bar packs 30g of protein and 350 calories.",
+   "expected": [
+     {"type": "claim", "contains": "30g"},
+     {"type": "claim", "contains": "350"}]},
+  {"title": "E09 competitor comparison",
+   "text": "FitFuel is way better than Brand X protein bars.",
+   "expected": [
+     {"type": "claim", "contains": "brand x"}]},
+  {"title": "E10 bad tone",
+   "text": "You will be a loser if you skip your protein. Buy now or regret it forever.",
+   "expected": [
+     {"type": "tone", "contains": "loser"},
+     {"type": "tone", "contains": "regret"}]},
+  {"title": "E11 disclaimer present, unverified benefit",
+   "text": "Our bars support heart health. These statements have not been evaluated by a health authority. Not intended to diagnose, treat, cure or prevent any disease.",
+   "expected": [
+     {"type": "claim", "contains": "heart health"}]},
+  {"title": "E12 mixed problems",
+   "text": "Fit Fuel's miracle bars boost immunity! Only Rs 199 for 30g of protein.",
+   "expected": [
+     {"type": "terminology", "contains": "fit fuel"},
+     {"type": "terminology", "contains": "miracle"},
+     {"type": "claim", "contains": "immunity"},
+     {"type": "claim", "contains": "30g"},
+     {"type": "number_date", "contains": "rs 199"},
+     {"type": "claim", "contains": "disclaimer"}]}
+]

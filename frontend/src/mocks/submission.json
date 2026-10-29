@@ -1,0 +1,60 @@
+{
+  "id": 1,
+  "title": "CloudScale Q3 Product Launch Announcement",
+  "original_text": "Introducing CloudScale: The #1 cloud hosting provider with guaranteed 100% uptime SLA, fully immune to outages! Our revolutionary quantum engine makes traditional AWS and Google Cloud totally obsolete. Act now and get our cheap starter tier for only $9.99/mo! Contact our sales ninja today to destroy your competitors!",
+  "current_text": "Introducing CloudScale: The #1 cloud hosting provider with guaranteed 99.9% uptime SLA, fully immune to outages! Our revolutionary quantum engine makes traditional AWS and Google Cloud totally obsolete. Act now and get our cost-effective starter tier for only $9.99/mo! Contact our solutions specialist today to destroy your competitors!",
+  "status": "in_review",
+  "version": 1,
+  "approved_text": null,
+  "created_at": "2026-10-28T10:00:00Z",
+  "has_image": false,
+  "findings": [
+    {
+      "id": 101,
+      "type": "terminology",
+      "severity": "high",
+      "status": "open",
+      "start_offset": 70,
+      "end_offset": 81,
+      "flagged_text": "100% uptime",
+      "message": "Never claim 100% uptime; our maximum SLA commitment is 99.9%.",
+      "evidence_quote": "CloudScale provides an enterprise availability SLA of 99.9% uptime for Tier-1 workloads.",
+      "evidence_chunk_id": 1,
+      "citation_title": "Brand Guidelines & Product Specifications (v2.4)",
+      "citation_page": 1,
+      "confidence": 1.0,
+      "verified": true,
+      "fix": {
+        "id": 1,
+        "original_text": "100% uptime",
+        "suggested_text": "99.9% uptime SLA",
+        "rationale": "Align with enterprise SLA commitment."
+      },
+      "region": null
+    },
+    {
+      "id": 102,
+      "type": "terminology",
+      "severity": "medium",
+      "status": "open",
+      "start_offset": 204,
+      "end_offset": 209,
+      "flagged_text": "cheap",
+      "message": "Avoid 'cheap' to maintain premium luxury positioning.",
+      "evidence_quote": "Avoid diminutive or budget terminology such as 'cheap' or 'bargain'.",
+      "evidence_chunk_id": 1,
+      "citation_title": "Brand Guidelines & Product Specifications (v2.4)",
+      "citation_page": 1,
+      "confidence": 1.0,
+      "verified": true,
+      "fix": {
+        "id": 2,
+        "original_text": "cheap",
+        "suggested_text": "cost-effective",
+        "rationale": "Maintain premium positioning."
+      },
+      "region": null
+    }
+  ]
+}
+

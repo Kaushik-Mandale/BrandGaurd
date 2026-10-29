@@ -1,0 +1,43 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: brandguard_db
+    environment:
+      POSTGRES_USER: brandguard
+      POSTGRES_PASSWORD: brandguard
+      POSTGRES_DB: brandguard
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U brandguard"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    container_name: brandguard_redis
+    ports:
+      - "6379:6379"
+
+  backend:
+    build: ./backend
+    container_name: brandguard_backend
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg2://brandguard:brandguard@db:5432/brandguard
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - uploads:/app/uploads
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  pgdata:
+  uploads:
