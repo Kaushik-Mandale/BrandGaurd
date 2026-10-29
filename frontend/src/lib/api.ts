@@ -3,7 +3,10 @@ import type {
   Submission, SubmissionListItem, SubmissionRevision,
 } from "./types";
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// In production on Vercel: requests go to /api/* which rewrites to the backend service
+// (same domain → no CORS). Locally: point NEXT_PUBLIC_API_URL at your backend port.
+// The trailing-slash strip ensures /api + /health = /api/health, not /api//health.
+const BASE = (process.env.NEXT_PUBLIC_API_URL ?? "/api").replace(/\/$/, "");
 
 export class ApiError extends Error {
   status: number;
