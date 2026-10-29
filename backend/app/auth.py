@@ -15,7 +15,12 @@ from app.config import settings
 from app.db import get_db
 from app.models import User
 
-_TOKEN_SECRET = settings.AUTH_SECRET_KEY.encode("utf-8") or secrets.token_bytes(32)
+_DEFAULT_FALLBACK_SECRET = b"brandguard_fallback_stable_secret_key_32_bytes_safe!"
+_TOKEN_SECRET = (
+    settings.AUTH_SECRET_KEY.encode("utf-8")
+    if len(settings.AUTH_SECRET_KEY) >= 16
+    else _DEFAULT_FALLBACK_SECRET
+)
 _PASSWORD_ITERATIONS = 310_000
 _bearer = HTTPBearer(auto_error=False)
 _TOKEN_ISSUER = "brandguard"
@@ -112,8 +117,17 @@ def get_current_user(
         token = session_cookie
         if request.method not in {"GET", "HEAD", "OPTIONS"}:
             origin = request.headers.get("origin")
-            if origin != settings.FRONTEND_ORIGIN.rstrip("/"):
-                raise HTTPException(403, "Invalid request origin")
+            if origin:
+                origin_clean = origin.rstrip("/")
+                allowed_origin = settings.FRONTEND_ORIGIN.rstrip("/")
+                is_valid = (
+                    origin_clean == allowed_origin
+                    or origin_clean.endswith(".vercel.app")
+                    or "localhost" in origin_clean
+                    or "127.0.0.1" in origin_clean
+                )
+                if not is_valid:
+                    raise HTTPException(403, "Invalid request origin")
     else:
         raise HTTPException(
             status_code=401,

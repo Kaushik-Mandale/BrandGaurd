@@ -4,7 +4,7 @@
     "backend": {
       "root": "backend",
       "framework": "fastapi",
-      "buildCommand": "pip install -r requirements.txt"
+      "entrypoint": "main.py"
     },
     "frontend": {
       "root": "frontend",
@@ -34,4 +34,3 @@
     }
   ]
 }
-

@@ -1,3 +1,4 @@
+import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,7 +18,16 @@ class Settings(BaseSettings):
     EMBEDDING_DIM: int = 384
 
     FRONTEND_ORIGIN: str = "http://localhost:3000"
-    UPLOAD_DIR: str = "uploads"
+    UPLOAD_DIR: str = "/tmp/uploads" if os.environ.get("VERCEL") else "uploads"
+
+    def get_database_url(self) -> str:
+        url = self.DATABASE_URL
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql+psycopg2://", 1)
+        elif url.startswith("postgresql://") and not url.startswith("postgresql+psycopg2://"):
+            url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+        return url
 
 
 settings = Settings()
+settings.DATABASE_URL = settings.get_database_url()

@@ -27,7 +27,9 @@ def _get_model() -> TextEmbedding:
     global _model
     if _model is None:
         log.info("Loading FastEmbed model %s …", _FASTEMBED_MODEL)
-        _model = TextEmbedding(model_name=_FASTEMBED_MODEL)
+        import os
+        cache_dir = os.environ.get("FASTEMBED_CACHE_DIR", "/tmp/fastembed_cache" if os.environ.get("VERCEL") else None)
+        _model = TextEmbedding(model_name=_FASTEMBED_MODEL, cache_dir=cache_dir)
     return _model
 
 
