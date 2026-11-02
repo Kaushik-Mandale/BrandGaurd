@@ -20,6 +20,13 @@ class Settings(BaseSettings):
     FRONTEND_ORIGIN: str = "http://localhost:3000"
     UPLOAD_DIR: str = "/tmp/uploads" if os.environ.get("VERCEL") else "uploads"
 
+    # Evaluator demo account configuration
+    DEMO_ACCOUNT_ENABLED: bool = True
+    DEMO_ACCOUNT_EMAIL: str = "demo@brandguard.ai"
+    DEMO_ACCOUNT_PASSWORD: str = "BrandGuardDemo2026!"
+    DEMO_ACCOUNT_NAME: str = "Inkloom Hackathon Evaluator"
+    DEMO_ACCOUNT_ORG_NAME: str = "Acme Corp (Demo)"
+
     def get_database_url(self) -> str:
         url = self.DATABASE_URL
         if url.startswith("postgres://"):

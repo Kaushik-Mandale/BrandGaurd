@@ -7,8 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import settings
-from app.db import init_db
+from app.db import init_db, SessionLocal
 from app.routers import assets, auth, insights, knowledge, review, submissions
+from app.seed import seed_demo_workspace
 
 log = logging.getLogger("brandguard")
 
@@ -21,6 +22,16 @@ async def lifespan(app: FastAPI):
         init_db()
     except Exception as exc:
         log.error("Database initialization failed during startup: %s", exc)
+
+    if settings.DEMO_ACCOUNT_ENABLED:
+        try:
+            db = SessionLocal()
+            seed_demo_workspace(db)
+            db.close()
+            log.info("Demo account ensured on application startup.")
+        except Exception as exc:
+            log.warning("Failed to auto-seed demo workspace on startup: %s", exc)
+
     yield
 
 

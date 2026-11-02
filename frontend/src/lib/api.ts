@@ -55,6 +55,21 @@ export interface AuthUser {
   organization_id: number;
 }
 
+export interface DemoAccountInfo {
+  enabled: boolean;
+  email: string;
+  password: string;
+  name: string;
+  organization_name: string;
+  role: string;
+}
+
+export interface AuthStatusResponse {
+  authentication_enabled: boolean;
+  registration_enabled: boolean;
+  demo?: DemoAccountInfo | null;
+}
+
 interface AuthResponse {
   expires_in: number;
   user: AuthUser;
@@ -78,7 +93,7 @@ const post = (body?: unknown): RequestInit =>
 
 export const api = {
   health: () => req<{ status: string; version: string }>("/health"),
-  authStatus: () => req<{ authentication_enabled: boolean; registration_enabled: boolean }>("/auth/status"),
+  authStatus: () => req<AuthStatusResponse>("/auth/status"),
   login: (email: string, password: string) =>
     req<AuthResponse>("/auth/login", post({ email, password })),
   register: async (name: string, email: string, password: string, organization_name: string) => {

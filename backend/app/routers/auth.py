@@ -1,4 +1,4 @@
-"""Self-service account registration and token authentication endpoints."""
+"""Self-service account registration, demo account status, and token authentication endpoints."""
 import re
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
@@ -18,6 +18,7 @@ from app.auth import (
 from app.db import get_db
 from app.config import settings
 from app.models import Organization, User
+from app.seed import seed_demo_workspace
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -66,8 +67,33 @@ def _user_data(user: User) -> dict:
 
 
 @router.get("/status")
-def auth_status():
-    return {"authentication_enabled": True, "registration_enabled": True}
+def auth_status(db: Session = Depends(get_db)):
+    """Returns authentication capabilities and public evaluator demo account credentials."""
+    demo_info = None
+    if settings.DEMO_ACCOUNT_ENABLED:
+        # Check if demo account exists; seed if missing
+        demo_email = settings.DEMO_ACCOUNT_EMAIL.strip().lower()
+        user = db.query(User).filter(User.email == demo_email).first()
+        if not user:
+            try:
+                user = seed_demo_workspace(db)
+            except Exception:
+                pass
+        
+        demo_info = {
+            "enabled": True,
+            "email": settings.DEMO_ACCOUNT_EMAIL,
+            "password": settings.DEMO_ACCOUNT_PASSWORD,
+            "name": settings.DEMO_ACCOUNT_NAME,
+            "organization_name": settings.DEMO_ACCOUNT_ORG_NAME,
+            "role": user.role if user else "creator",
+        }
+
+    return {
+        "authentication_enabled": True,
+        "registration_enabled": True,
+        "demo": demo_info,
+    }
 
 
 @router.post("/register", status_code=201)
@@ -105,6 +131,15 @@ def register(body: RegisterBody, response: Response, db: Session = Depends(get_d
 @router.post("/login")
 def login(body: LoginBody, response: Response, db: Session = Depends(get_db)):
     email = body.email.strip().lower()
+
+    # If demo email and account not yet present, auto-seed
+    if settings.DEMO_ACCOUNT_ENABLED and email == settings.DEMO_ACCOUNT_EMAIL.strip().lower():
+        if not db.query(User).filter(User.email == email).first():
+            try:
+                seed_demo_workspace(db)
+            except Exception:
+                pass
+
     user = db.query(User).filter(User.email == email).first()
     password_hash = user.password_hash if user else _DUMMY_PASSWORD_HASH
     valid_password = verify_password(body.password, password_hash)
