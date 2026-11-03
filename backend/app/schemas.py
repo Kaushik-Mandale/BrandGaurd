@@ -134,3 +134,5 @@ class InsightsOut(BaseModel):
     top_flagged: list
     top_rules: list
     ambiguous_rules: list
+    benchmark: Optional[dict] = None
+

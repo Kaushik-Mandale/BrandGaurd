@@ -53,13 +53,30 @@ def run_rule_checks(text: str, rules: list[BrandRule]) -> list[dict]:
                 })
 
         elif rule.kind == RuleKind.required_text:
+            # If the required text is a health/medical disclaimer, only trigger if copy makes a health/nutrition benefit claim
+            is_health_disclaimer = any(
+                k in (rule.description or "").lower()
+                for k in ["health", "disclaimer", "statement", "diagnose", "cure"]
+            )
+            if is_health_disclaimer:
+                has_health_mention = bool(
+                    re.search(
+                        r"\b(health|immunity|recovery|muscle|heart|energy|detox|cure|prevent|boost|miracle)\b",
+                        text,
+                        re.IGNORECASE,
+                    )
+                )
+                if not has_health_mention:
+                    continue  # Clean post without health claims does not require a disclaimer!
+
             if rule.pattern.lower() not in text.lower():
+                finding_type = FindingType.claim if is_health_disclaimer else FindingType.terminology
                 findings.append({
-                    "type": FindingType.terminology,
+                    "type": finding_type,
                     "severity": rule.severity,
                     "start": len(text), "end": len(text),
                     "flagged_text": "",
-                    "message": rule.description or f'Required text "{rule.pattern}" is missing.',
+                    "message": rule.description or f'Missing required disclaimer: "{rule.pattern}".',
                     "rule_id": rule.id,
                     "fix_text": rule.pattern,
                     "fix_rationale": "Append the required disclaimer or text.",

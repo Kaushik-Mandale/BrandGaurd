@@ -122,3 +122,4 @@ def test_demo_user_workspace_has_guidelines_and_rules(client):
     rules_res = client.get("/knowledge/rules")
     assert rules_res.status_code == 200
     assert len(rules_res.json()) >= 1
+

@@ -27,6 +27,15 @@ class Settings(BaseSettings):
     DEMO_ACCOUNT_NAME: str = "Inkloom Hackathon Evaluator"
     DEMO_ACCOUNT_ORG_NAME: str = "Acme Corp (Demo)"
 
+    # Verification & Visual thresholds
+    VERIFIER_MIN_CONFIDENCE: float = 0.65
+    VERIFIER_CITATION_STRICT: bool = True
+    VISION_DELTA_E_THRESHOLD: float = 35.0
+    VISION_LOGO_THRESHOLD: float = 0.65
+    VISION_WCAG_AA_NORMAL_RATIO: float = 4.5
+    VISION_WCAG_AA_LARGE_RATIO: float = 3.0
+
+
     def get_database_url(self) -> str:
         url = self.DATABASE_URL
         if url.startswith("postgres://"):

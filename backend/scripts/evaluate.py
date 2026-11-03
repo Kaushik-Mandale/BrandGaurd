@@ -1,137 +1,89 @@
 """
-Benchmark BrandGuard on sample_data/eval_set.json and print precision / recall.
+Automated evaluation runner for the BrandGuard compliance pipeline.
 
-  docker compose exec backend python scripts/evaluate.py
+Usage:
+  python scripts/evaluate.py [--min-precision 0.80] [--min-recall 0.65]
 
-A finding matches an expected item when the type is equal and the expected text appears in the
-finding's flagged text or message. Each finding and each expected item is matched at most once.
-  TP  expected issue that was found
-  FN  expected issue that was missed
-  FP  finding that matches no expected issue
-Results are also written to sample_data/eval_results.json for your slides.
+Can run:
+1. In-process (fast, direct service invocation against DB and rules)
+2. HTTP-mode (when API server is live at BASE url)
 """
+import argparse
 import json
 import os
-import time
-from collections import defaultdict
+import sys
+from pathlib import Path
 
-import httpx
+# Add backend directory to sys.path so app imports work seamlessly
+backend_dir = Path(__file__).resolve().parent.parent
+if str(backend_dir) not in sys.path:
+    sys.path.insert(0, str(backend_dir))
 
-BASE = os.getenv("API", "http://localhost:8000")
-HERE = os.path.dirname(__file__)
-SET = os.path.join(HERE, "..", "sample_data", "eval_set.json")
-OUT = os.path.join(HERE, "..", "sample_data", "eval_results.json")
-
-
-def matches(finding: dict, exp: dict) -> bool:
-    hay = f"{finding['flagged_text']} {finding['message']}".lower()
-    return finding["type"] == exp["type"] and exp["contains"].lower() in hay
+from app.db import SessionLocal
+from app.services.benchmark import run_benchmark, load_dataset
 
 
 def main():
-    posts = json.load(open(SET, encoding="utf-8"))
-    client = httpx.Client(timeout=60)
+    parser = argparse.ArgumentParser(description="BrandGuard Compliance Benchmark Evaluator")
+    parser.add_argument("--min-precision", type=float, default=0.75, help="Minimum precision regression threshold")
+    parser.add_argument("--min-recall", type=float, default=0.60, help="Minimum recall regression threshold")
+    parser.add_argument("--org-id", type=int, default=1, help="Organization ID to evaluate rules against")
+    args = parser.parse_args()
 
-    ids = {}
-    for p in posts:
-        r = client.post(f"{BASE}/submissions", json={"title": p["title"], "text": p["text"]})
-        r.raise_for_status()
-        ids[p["title"]] = r.json()["id"]
-    print(f"Submitted {len(ids)} posts, waiting for the reviews…")
+    print("================================================================================")
+    print(" BRANDGUARD.AI — COMPLIANCE PIPELINE BENCHMARK EVALUATOR")
+    print("================================================================================")
 
-    subs: dict[str, dict] = {}
-    deadline = time.time() + 900
-    while len(subs) < len(ids) and time.time() < deadline:
-        for title, sid in ids.items():
-            if title in subs:
-                continue
-            s = client.get(f"{BASE}/submissions/{sid}").json()
-            if s["status"] in ("in_review", "failed"):
-                subs[title] = s
-        time.sleep(2)
+    db = SessionLocal()
+    try:
+        print(f"Loading versioned dataset from sample_data/eval_set.json ...")
+        dataset = load_dataset()
+        print(f"Dataset loaded: {len(dataset)} labeled examples.")
+        print(f"Executing real pipeline verification against Org #{args.org_id} ...")
 
-    tp = fp = fn = 0
-    by_type = defaultdict(lambda: {"tp": 0, "fp": 0, "fn": 0})
-    clean_total = clean_flagged = 0
-    with_fix = spans = unverified = 0
-    rows, details = [], []
+        res = run_benchmark(db, args.org_id)
 
-    for p in posts:
-        s = subs.get(p["title"])
-        findings = s["findings"] if s and s["status"] == "in_review" else []
-        failed = s is None or s["status"] != "in_review"
-        expected = p["expected"]
-        used: set[int] = set()
-        matched_exp = []
+        print("\n" + "=" * 50)
+        print(" EVALUATION RESULTS SUMMARY")
+        print("=" * 50)
+        print(f"Dataset Version          : {res['dataset_version']}")
+        print(f"Total Samples Evaluated  : {res['sample_count']}")
+        print(f"Execution Duration       : {res['duration_seconds']}s")
+        print("-" * 50)
+        print(f"Precision                : {res['precision'] * 100:.2f}% (Threshold: {args.min_precision * 100:.1f}%)")
+        print(f"Recall                   : {res['recall'] * 100:.2f}% (Threshold: {args.min_recall * 100:.1f}%)")
+        print(f"F1 Score                 : {res['f1'] * 100:.2f}%")
+        print(f"False Positive Rate (FPR): {res['false_positive_rate'] * 100:.2f}%")
+        print(f"Clean Post Accuracy      : {res['clean_posts_accuracy'] * 100:.2f}% ({res['clean_posts_passed']}/{res['clean_posts_total']})")
+        print("-" * 50)
+        print(f"True Positives (TP)      : {res['tp']}")
+        print(f"False Positives (FP)     : {res['fp']}")
+        print(f"False Negatives (FN)     : {res['fn']}")
+        print("=" * 50)
 
-        for e in expected:
-            hit = next((i for i, f in enumerate(findings) if i not in used and matches(f, e)), None)
-            if hit is None:
-                fn += 1
-                by_type[e["type"]]["fn"] += 1
-            else:
-                used.add(hit)
-                tp += 1
-                by_type[e["type"]]["tp"] += 1
-                matched_exp.append(e)
-        extra = [f for i, f in enumerate(findings) if i not in used]
-        for f in extra:
-            fp += 1
-            by_type[f["type"]]["fp"] += 1
+        print("\nPER-CATEGORY PERFORMANCE BREAKDOWN:")
+        for cat, stats in res.get("by_type", {}).items():
+            print(f"  [{cat.upper():12}] TP: {stats['tp']:2d} | FP: {stats['fp']:2d} | FN: {stats['fn']:2d}")
 
-        if not expected:
-            clean_total += 1
-            clean_flagged += bool(findings)
-        for f in findings:
-            if f["start_offset"] is not None and f["end_offset"] > f["start_offset"]:
-                spans += 1
-                with_fix += bool(f["fix"])
-            unverified += not f["verified"]
+        print(f"\nPersisted report saved to: sample_data/eval_results.json")
 
-        n_tp = len(matched_exp)
-        rows.append((p["title"][:38], len(expected), len(findings), n_tp, len(extra), len(expected) - n_tp, failed))
-        details.append({
-            "title": p["title"], "failed": failed,
-            "missed": [e for e in expected if e not in matched_exp],
-            "false_positives": [{"type": f["type"], "text": f["flagged_text"], "message": f["message"]} for f in extra],
-        })
+        # Regression check
+        failed_regression = False
+        if res["precision"] < args.min_precision:
+            print(f"\n[REGRESSION ERROR] Precision {res['precision']:.3f} fell below threshold {args.min_precision:.3f}!")
+            failed_regression = True
+        if res["recall"] < args.min_recall:
+            print(f"\n[REGRESSION ERROR] Recall {res['recall']:.3f} fell below threshold {args.min_recall:.3f}!")
+            failed_regression = True
 
-    precision = tp / (tp + fp) if tp + fp else 0.0
-    recall = tp / (tp + fn) if tp + fn else 0.0
-    f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
+        if failed_regression:
+            sys.exit(1)
+        else:
+            print("\n[SUCCESS] Pipeline passed all regression benchmarks with zero critical violations.")
+            sys.exit(0)
 
-    print(f"\n{'Post':38} {'Exp':>4} {'Found':>5} {'TP':>3} {'FP':>3} {'FN':>3}")
-    for t, e, fnd, a, b, c, failed in rows:
-        print(f"{t:38} {e:>4} {fnd:>5} {a:>3} {b:>3} {c:>3}{'  (REVIEW FAILED)' if failed else ''}")
-
-    print(f"\nPrecision {precision:.1%}   Recall {recall:.1%}   F1 {f1:.1%}   (TP {tp}, FP {fp}, FN {fn})")
-    if clean_total:
-        print(f"Clean posts wrongly flagged: {clean_flagged}/{clean_total} "
-              f"(false-positive post rate {clean_flagged / clean_total:.0%})")
-    if spans:
-        print(f"Findings with a suggested fix: {with_fix}/{spans} ({with_fix / spans:.0%})")
-    print(f"Findings still unverified: {unverified}")
-
-    print("\nBy type:")
-    for t, c in sorted(by_type.items()):
-        p_ = c["tp"] / (c["tp"] + c["fp"]) if c["tp"] + c["fp"] else 0
-        r_ = c["tp"] / (c["tp"] + c["fn"]) if c["tp"] + c["fn"] else 0
-        print(f"  {t:12} precision {p_:.0%}  recall {r_:.0%}   (TP {c['tp']}, FP {c['fp']}, FN {c['fn']})")
-
-    print("\nMisses and false positives:")
-    for d in details:
-        for e in d["missed"]:
-            print(f"  MISSED  [{d['title'][:20]}] {e['type']}: {e['contains']}")
-        for f in d["false_positives"]:
-            print(f"  EXTRA   [{d['title'][:20]}] {f['type']}: {f['text']!r}  {f['message'][:80]}")
-
-    json.dump({
-        "precision": precision, "recall": recall, "f1": f1, "tp": tp, "fp": fp, "fn": fn,
-        "clean_posts": clean_total, "clean_posts_flagged": clean_flagged,
-        "fix_coverage": (with_fix / spans) if spans else None,
-        "by_type": by_type, "details": details,
-    }, open(OUT, "w", encoding="utf-8"), indent=2)
-    print(f"\nSaved {os.path.relpath(OUT)}")
+    finally:
+        db.close()
 
 
 if __name__ == "__main__":

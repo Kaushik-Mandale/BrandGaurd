@@ -1,5 +1,5 @@
 import type {
-  AuditEntry, BrandAsset, BrandDocument, Insights, Rule, RuleCreate, SearchHit,
+  AuditEntry, BrandAsset, BrandDocument, BenchmarkResult, Insights, Rule, RuleCreate, SearchHit,
   Submission, SubmissionListItem, SubmissionRevision,
 } from "./types";
 
@@ -175,4 +175,5 @@ export const api = {
   audit: (submissionId?: number) =>
     req<AuditEntry[]>("/audit" + (submissionId ? `?submission_id=${submissionId}` : "")),
   insights: () => req<Insights>("/insights"),
+  triggerBenchmark: () => req<BenchmarkResult>("/insights/benchmark/run", post()),
 };

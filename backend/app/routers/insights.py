@@ -7,6 +7,7 @@ from app.auth import get_current_user
 from app.db import get_db
 from app.models import AuditLog, Finding, FindingStatus, FindingType, Submission, SubmissionStatus, BrandRule, User
 from app.schemas import InsightsOut
+from app.services.benchmark import get_latest_benchmark_result, run_benchmark
 
 router = APIRouter(prefix="/insights", tags=["insights"])
 
@@ -103,6 +104,12 @@ def insights(
         if r["rejected"] >= 2 and r["rejected"] >= r["accepted"]
     ]
 
+    bench = None
+    try:
+        bench = get_latest_benchmark_result(db, user.org_id)
+    except Exception:
+        pass
+
     return InsightsOut(
         submissions={"total": total_subs, "approved": approved_subs},
         findings={
@@ -121,4 +128,16 @@ def insights(
         top_flagged=top_flagged,
         top_rules=top_rules,
         ambiguous_rules=ambiguous_rules,
+        benchmark=bench,
     )
+
+
+@router.post("/benchmark/run")
+def trigger_benchmark(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Executes a fresh evaluation run of the pipeline on the benchmark dataset."""
+    result = run_benchmark(db, user.org_id)
+    return result
+

@@ -35,3 +35,13 @@ def chat(messages: list[dict], temperature: float = 0.2, max_tokens: int = 1024)
     except Exception as exc:
         log.error("LLM call failed: %s", exc)
         raise
+
+
+def chat_json(system_prompt: str, user_prompt: str, temperature: float = 0.1) -> str:
+    """Call LLM expecting a JSON response string."""
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
+    return chat(messages, temperature=temperature)
+

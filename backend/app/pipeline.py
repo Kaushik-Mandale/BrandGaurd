@@ -17,6 +17,7 @@ from app.models import BrandRule, Finding, FindingRegion, Fix, Submission, Submi
 from app.services.accessibility import check_accessibility
 from app.services.ai_checks import run_ai_checks
 from app.services.audit import log_action
+from app.services.formatting import check_formatting
 from app.services.fixer import generate_fixes
 from app.services.llm import llm_available
 from app.services.rule_engine import exempt_spans, inside_exempt, run_rule_checks, merge_findings
@@ -90,6 +91,10 @@ def run_review(submission_id: int):
             # Step 1b: Accessibility and content quality checks
             a11y = check_accessibility(text)
             raw = merge_findings(raw, a11y)
+
+            # Step 1c: Formatting compliance (dates, currency, percentages, punctuation)
+            fmt = check_formatting(text)
+            raw = merge_findings(raw, fmt)
 
             if llm_available():
                 # Step 2: LLM checks (claims + tone)

@@ -32,11 +32,33 @@ from app.models import (
     RuleKind,
 )
 from app.services.embeddings import embed_batch
+from sqlalchemy.orm import Session
 
 log = logging.getLogger("brandguard.seed")
 
 DEMO_ORG_ID = 1
 DEMO_USER_ID = 1
+
+
+def ensure_development_workspace(db: Session):
+    """Ensures base development organization and user exist for tests and local dev."""
+    org = db.get(Organization, DEMO_ORG_ID)
+    if not org:
+        org = Organization(id=DEMO_ORG_ID, name="Development Workspace")
+        db.add(org)
+        db.flush()
+
+    user = db.get(User, DEMO_USER_ID)
+    if not user:
+        db.add(User(
+            id=DEMO_USER_ID,
+            org_id=org.id,
+            name="Local Developer",
+            email="local@brandguard.dev",
+            role="manager",
+            password_hash=hash_password("DevPassword2026!"),
+        ))
+    db.commit()
 
 
 def seed_demo_workspace(db) -> User:

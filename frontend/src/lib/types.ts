@@ -137,6 +137,7 @@ export interface Insights {
   top_flagged: { type: string; text: string; count: number }[];
   top_rules: RuleStat[];
   ambiguous_rules: (RuleStat & { hint: string })[];
+  benchmark?: BenchmarkResult | null;
 }
 
 export interface BrandAsset {
@@ -145,4 +146,39 @@ export interface BrandAsset {
   name: string;
   data: Record<string, unknown>;
   created_at: string;
+}
+
+export interface BenchmarkCategoryStats {
+  tp: number;
+  fp: number;
+  fn: number;
+}
+
+export interface BenchmarkTestDetail {
+  title: string;
+  failed: boolean;
+  findings_count: number;
+  expected_count: number;
+  missed: { type: string; contains: string }[];
+  false_positives: { type: string; flagged_text: string; message: string }[];
+}
+
+export interface BenchmarkResult {
+  dataset_version: string;
+  sample_count: number;
+  executed_at: string;
+  duration_seconds: number;
+  precision: number;
+  recall: number;
+  f1: number;
+  false_positive_rate: number;
+  tp: number;
+  fp: number;
+  fn: number;
+  clean_posts_total: number;
+  clean_posts_passed: number;
+  clean_posts_accuracy: number;
+  passed_regression: boolean;
+  by_type: Record<string, BenchmarkCategoryStats>;
+  details: BenchmarkTestDetail[];
 }
