@@ -372,13 +372,44 @@ export default function InsightsPage() {
             {benchLoading && (
               <div style={{ padding: "40px 0", textAlign: "center", color: "var(--text-muted)" }}>
                 <div className="pulse-dot" style={{ fontSize: 22, marginBottom: 8 }}>🔬</div>
-                <div>Evaluating pipeline against 12 labeled test cases…</div>
+                <div>Evaluating pipeline against versioned benchmark test cases…</div>
               </div>
             )}
           </div>
 
           {benchResult && !benchLoading && (
             <>
+              {/* Execution Mode & Scope Notice */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: 10,
+                  padding: "10px 16px",
+                  borderRadius: "var(--radius-sm)",
+                  backgroundColor: "var(--cerulean-dim)",
+                  border: "1px solid var(--border)",
+                  fontSize: 12,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontWeight: 800, color: "var(--oxford-navy)", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                    Execution Mode:
+                  </span>
+                  <span style={{ fontWeight: 700, color: "var(--cerulean)", backgroundColor: "#FFFFFF", padding: "2px 8px", borderRadius: 4, border: "1px solid var(--border)" }}>
+                    {benchResult.execution_mode ? benchResult.execution_mode.replace(/_/g, " ").toUpperCase() : "OFFLINE DETERMINISTIC"}
+                  </span>
+                  <span style={{ color: "var(--text-secondary)" }}>
+                    {benchResult.evaluation_scope || "Deterministic Rule Engine + Content Formatting + Accessibility Validation"}
+                  </span>
+                </div>
+                <span style={{ color: "var(--text-muted)", fontSize: 11, fontStyle: "italic" }}>
+                  Zero external LLM latency · Repeatable CI/CD regression evaluation
+                </span>
+              </div>
+
               {/* Regression Status Banner */}
               <div
                 style={{

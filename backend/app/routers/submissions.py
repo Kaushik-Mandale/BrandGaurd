@@ -75,7 +75,19 @@ def list_submissions(
         .order_by(Submission.created_at.desc())
         .all()
     )
-    return subs
+    result = []
+    for s in subs:
+        result.append(
+            SubmissionListItem(
+                id=s.id,
+                title=s.title,
+                status=s.status,
+                created_at=s.created_at,
+                findings_count=len(s.findings) if s.findings else 0,
+                has_image=bool(s.file_path) and os.path.splitext(s.file_path or "")[1].lower() in IMAGE_EXT,
+            )
+        )
+    return result
 
 
 @router.get("/{sub_id}", response_model=SubmissionOut)

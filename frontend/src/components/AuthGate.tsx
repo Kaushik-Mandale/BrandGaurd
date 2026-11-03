@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import Nav from "@/components/Nav";
+import AppShell from "@/components/AppShell";
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -29,12 +29,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (pathname === "/login") return <>{children}</>;
   if (authorizedPath === pathname) {
-    return (
-      <>
-        <Nav />
-        <main className="main-content">{children}</main>
-      </>
-    );
+    return <AppShell>{children}</AppShell>;
   }
   return (
     <div style={{ minHeight: "50vh", display: "grid", placeItems: "center", color: "var(--text-muted)" }}>

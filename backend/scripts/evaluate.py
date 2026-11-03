@@ -47,6 +47,8 @@ def main():
         print(" EVALUATION RESULTS SUMMARY")
         print("=" * 50)
         print(f"Dataset Version          : {res['dataset_version']}")
+        print(f"Execution Mode           : {res.get('execution_mode', 'offline_deterministic').upper()}")
+        print(f"Evaluation Scope         : {res.get('evaluation_scope', 'Deterministic Pipeline Checks')}")
         print(f"Total Samples Evaluated  : {res['sample_count']}")
         print(f"Execution Duration       : {res['duration_seconds']}s")
         print("-" * 50)

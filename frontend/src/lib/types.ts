@@ -57,6 +57,8 @@ export interface SubmissionListItem {
   title: string;
   status: SubmissionStatus;
   created_at: string;
+  findings_count?: number;
+  has_image?: boolean;
 }
 
 export interface SubmissionRevision {
@@ -166,6 +168,8 @@ export interface BenchmarkTestDetail {
 export interface BenchmarkResult {
   dataset_version: string;
   sample_count: number;
+  execution_mode?: string;
+  evaluation_scope?: string;
   executed_at: string;
   duration_seconds: number;
   precision: number;

@@ -78,6 +78,8 @@ class SubmissionListItem(ORM):
     title: str
     status: SubmissionStatus
     created_at: datetime
+    findings_count: int = 0
+    has_image: bool = False
 
 
 class RuleCreate(BaseModel):

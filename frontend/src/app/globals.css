@@ -783,3 +783,38 @@ textarea:focus {
     scroll-behavior: auto !important;
   }
 }
+
+/* Responsive Sidebar & App Shell */
+@media (max-width: 1024px) {
+  .mobile-menu-trigger {
+    display: block !important;
+  }
+  .mobile-close-btn {
+    display: block !important;
+  }
+  .mobile-sidebar-closed {
+    position: fixed !important;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    transform: translateX(-100%) !important;
+    box-shadow: none;
+  }
+  .mobile-sidebar-open {
+    position: fixed !important;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    transform: translateX(0) !important;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
+  }
+}
+
+@media (max-width: 1100px) {
+  .dashboard-two-col {
+    flex-direction: column !important;
+  }
+  .dashboard-right-sidebar {
+    width: 100% !important;
+  }
+}

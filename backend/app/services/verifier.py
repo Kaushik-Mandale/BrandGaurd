@@ -48,12 +48,22 @@ Respond ONLY with valid JSON:
 }"""
 
 
-def _validate_citation_exists(db: Session, chunk_id: int | None, quote: str | None) -> bool:
-    """Validate that the cited chunk and excerpt actually exist in the database."""
-    if not chunk_id:
+def _validate_citation_exists(
+    db: Session | None,
+    chunk_id: int | None,
+    quote: str | None = None,
+    org_id: int | None = None,
+) -> bool:
+    """
+    Validate that the cited chunk and excerpt actually exist in the database
+    and belong to the specified organization.
+    """
+    if db is None or not chunk_id:
         return False
     chunk = db.get(BrandChunk, chunk_id)
     if not chunk or not chunk.text:
+        return False
+    if org_id is not None and chunk.org_id != org_id:
         return False
     if quote and quote.strip():
         # Case-insensitive substring check
@@ -130,7 +140,9 @@ def _verify_one_finding(db: Session, org_id: int, finding: dict) -> dict:
     verdict = verdict.upper()  # normalise — monkeypatched versions may return lowercase
 
     # Map verdict to decision
-    if verdict in {"SUPPORTED", "CONTRADICTED"}:
+    if verdict == "DROP":
+        decision = "drop"
+    elif verdict in {"SUPPORTED", "CONTRADICTED"}:
         decision = "keep"
     else:
         decision = "uncertain"
@@ -148,13 +160,15 @@ def _verify_one_finding(db: Session, org_id: int, finding: dict) -> dict:
             chunks = retrieve(db, org_id, query, k=4)
             if chunks:
                 prev_cid = finding.get("evidence_chunk_id")
-                for c in chunks:
-                    if prev_cid and c["chunk_id"] == prev_cid:
-                        matched_chunk_id = c["chunk_id"]
-                        matched_doc_title = c["doc_title"]
-                        matched_page = c.get("page")
-                        matched_excerpt = finding.get("evidence_quote")
-                        break
+                # Enforce tenant isolation & existence: chunk must belong to this org
+                if prev_cid and _validate_citation_exists(db, prev_cid, org_id=org_id):
+                    for c in chunks:
+                        if c["chunk_id"] == prev_cid:
+                            matched_chunk_id = c["chunk_id"]
+                            matched_doc_title = c["doc_title"]
+                            matched_page = c.get("page")
+                            matched_excerpt = finding.get("evidence_quote")
+                            break
         except Exception:
             pass  # DB unavailable in test context — skip citation enrichment
 

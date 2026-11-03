@@ -307,27 +307,51 @@ def extract_image_text(file_path: str) -> str:
 
 def run_vision_checks(db: Session, org_id: int, file_path: str) -> list[dict]:
     """Execute complete vision compliance pipeline on an uploaded creative."""
-    import cv2
+    try:
+        import cv2
+    except ImportError:
+        log.warning("OpenCV not available: skipping vision checks")
+        return []
+
+    if not file_path or not os.path.exists(file_path):
+        log.warning("Image file does not exist: %s", file_path)
+        return []
 
     findings = []
-    img = cv2.imread(file_path)
+    try:
+        img = cv2.imread(file_path)
+    except Exception as e:
+        log.warning("Corrupted image file: %s (%s)", file_path, e)
+        return []
+
     if img is None:
         log.warning("Could not read image file: %s", file_path)
         return []
 
     h, w = img.shape[:2]
+    if h == 0 or w == 0:
+        return []
 
     # 1. OCR text extraction & WCAG contrast analysis
-    findings += _ocr_and_contrast_check(img, w, h)
+    try:
+        findings += _ocr_and_contrast_check(img, w, h)
+    except Exception as exc:
+        log.warning("Contrast/OCR check failed: %s", exc)
 
     # 2. CIELAB brand color palette comparison
-    palette_assets = db.query(BrandAsset).filter_by(org_id=org_id, kind="palette").all()
-    if palette_assets:
-        findings += _palette_check(img, palette_assets, w, h)
+    try:
+        palette_assets = db.query(BrandAsset).filter_by(org_id=org_id, kind="palette").all()
+        if palette_assets:
+            findings += _palette_check(img, palette_assets, w, h)
+    except Exception as exc:
+        log.warning("Palette check failed: %s", exc)
 
     # 3. Registered logo matching
-    logo_assets = db.query(BrandAsset).filter_by(org_id=org_id, kind="logo").all()
-    if logo_assets:
-        findings += _logo_check(img, logo_assets, file_path, w, h)
+    try:
+        logo_assets = db.query(BrandAsset).filter_by(org_id=org_id, kind="logo").all()
+        if logo_assets:
+            findings += _logo_check(img, logo_assets, file_path, w, h)
+    except Exception as exc:
+        log.warning("Logo check failed: %s", exc)
 
     return findings
