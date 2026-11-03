@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
 import type { SubmissionListItem, Insights, BenchmarkResult } from "@/lib/types";
 import { SubmissionStatusBadge } from "@/components/Badges";
+import PipelineProgress from "@/components/PipelineProgress";
 import { fmtDate, errMsg } from "@/lib/ui";
 import {
   PlusCircle,
@@ -644,107 +645,9 @@ export default function DashboardPage() {
           </div>
 
           {/* ── Section B: Continuous 6-Stage Audit Pipeline ────────────────── */}
-          <motion.div
-            id="pipeline"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-            style={{
-              backgroundColor: "#FFFFFF",
-              borderRadius: 16,
-              border: "1px solid var(--border)",
-              boxShadow: "var(--shadow-sm)",
-              padding: "24px 26px",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
-              <div>
-                <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--oxford-navy)" }}>
-                  Standard Audit Pipeline
-                </h3>
-                <p style={{ fontSize: 12.5, color: "var(--text-muted)", marginTop: 2 }}>
-                  Every piece of content progresses through these six verification stages:
-                </p>
-              </div>
-
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "var(--cerulean)",
-                  backgroundColor: "var(--frosted-dim)",
-                  padding: "4px 10px",
-                  borderRadius: 6,
-                }}
-              >
-                Consistent 6-Stage Workflow
-              </span>
-            </div>
-
-            {/* Pipeline Stage Steps (1 Row on Desktop, No Awkward Wrapping) */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(6, 1fr)",
-                gap: 8,
-              }}
-              className="pipeline-stages-grid"
-            >
-              {[
-                { step: "1", title: "Content Submitted", desc: "Text, doc or creative", icon: FileText, color: "#1D3557" },
-                { step: "2", title: "Brand Rules Checked", desc: "Terminology & formatting", icon: ShieldCheck, color: "#457B9D" },
-                { step: "3", title: "Claims Verified", desc: "Evidence fact-checking", icon: ShieldCheck, color: "#1D3557" },
-                { step: "4", title: "Visual Identity Checked", desc: "Logos, colors & contrast", icon: Palette, color: "#457B9D" },
-                { step: "5", title: "Human Review", desc: "Inspect & apply fixes", icon: UserCheck, color: "#E63946" },
-                { step: "6", title: "Final Decision", desc: "Approved or revisions", icon: Award, color: "#38A169" },
-              ].map((stage) => {
-                const Icon = stage.icon;
-                return (
-                  <div
-                    key={stage.step}
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      textAlign: "center",
-                      padding: "12px 6px",
-                      borderRadius: 10,
-                      backgroundColor: "var(--bg-main)",
-                      border: "1px solid var(--border-subtle)",
-                    }}
-                  >
-                    {/* Stage number circle */}
-                    <div
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: "50%",
-                        backgroundColor: stage.color,
-                        color: "#FFFFFF",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 12,
-                        fontWeight: 800,
-                        marginBottom: 6,
-                        boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
-                      }}
-                    >
-                      <Icon size={15} />
-                    </div>
-
-                    <div style={{ fontSize: 11.5, fontWeight: 800, color: "var(--oxford-navy)", lineHeight: 1.25 }}>
-                      {stage.step}. {stage.title}
-                    </div>
-
-                    <div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 3, lineHeight: 1.25 }}>
-                      {stage.desc}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
+          <div id="pipeline">
+            <PipelineProgress currentStage={5} findingsCount={inReviewCount} />
+          </div>
 
           {/* ── Section C: Recent Submissions Table ────────────────────────── */}
           <motion.div

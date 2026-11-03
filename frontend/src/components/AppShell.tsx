@@ -26,7 +26,6 @@ import {
   Menu,
   X,
   Sparkles,
-  Layers,
   Activity,
   Sliders,
   Check,
@@ -309,7 +308,7 @@ export default function AppShell({ children }: AppShellProps) {
           </Link>
 
           <Link
-            href="/#submissions"
+            href="/submissions"
             onClick={() => setMobileOpen(false)}
             style={{
               display: "flex",
@@ -318,19 +317,19 @@ export default function AppShell({ children }: AppShellProps) {
               padding: "9px 12px",
               borderRadius: 8,
               fontSize: 13,
-              fontWeight: 500,
-              backgroundColor: "transparent",
-              color: "#9FB5CD",
-              borderLeft: "3px solid transparent",
+              fontWeight: pathname === "/submissions" ? 700 : 500,
+              backgroundColor: pathname === "/submissions" ? "#1D3557" : "transparent",
+              color: pathname === "/submissions" ? "#FFFFFF" : "#9FB5CD",
+              borderLeft: pathname === "/submissions" ? "3px solid #A8DADC" : "3px solid transparent",
               transition: "all 0.15s ease",
             }}
           >
-            <FileText size={17} color="#7E9AB8" />
+            <FileText size={17} color={pathname === "/submissions" ? "#A8DADC" : "#7E9AB8"} />
             <span>Audit Submissions</span>
           </Link>
 
           <Link
-            href="/review/1"
+            href="/review"
             onClick={() => setMobileOpen(false)}
             style={{
               display: "flex",
@@ -386,7 +385,7 @@ export default function AppShell({ children }: AppShellProps) {
           </Link>
 
           <Link
-            href="/knowledge"
+            href="/knowledge?tab=rules"
             onClick={() => setMobileOpen(false)}
             style={{
               display: "flex",
@@ -396,6 +395,7 @@ export default function AppShell({ children }: AppShellProps) {
               borderRadius: 8,
               fontSize: 13,
               fontWeight: 500,
+              backgroundColor: "transparent",
               color: "#9FB5CD",
               borderLeft: "3px solid transparent",
               transition: "all 0.15s ease",
@@ -465,17 +465,17 @@ export default function AppShell({ children }: AppShellProps) {
                     padding: "7px 10px",
                     borderRadius: 6,
                     fontSize: 12.5,
-                    fontWeight: pathname.startsWith("/insights") ? 700 : 500,
-                    backgroundColor: pathname.startsWith("/insights") ? "#1D3557" : "transparent",
-                    color: pathname.startsWith("/insights") ? "#FFFFFF" : "#8FA9C4",
+                    fontWeight: pathname === "/insights" ? 700 : 500,
+                    backgroundColor: pathname === "/insights" ? "#1D3557" : "transparent",
+                    color: pathname === "/insights" ? "#FFFFFF" : "#8FA9C4",
                   }}
                 >
-                  <BarChart3 size={15} color={pathname.startsWith("/insights") ? "#A8DADC" : "#6A89AB"} />
-                  <span>Analytics</span>
+                  <BarChart3 size={15} color={pathname === "/insights" ? "#A8DADC" : "#6A89AB"} />
+                  <span>Analytics & Benchmark</span>
                 </Link>
 
                 <Link
-                  href="/insights"
+                  href="/audit"
                   onClick={() => setMobileOpen(false)}
                   style={{
                     display: "flex",
@@ -484,36 +484,19 @@ export default function AppShell({ children }: AppShellProps) {
                     padding: "7px 10px",
                     borderRadius: 6,
                     fontSize: 12.5,
-                    fontWeight: 500,
-                    color: "#8FA9C4",
+                    fontWeight: pathname === "/audit" ? 700 : 500,
+                    backgroundColor: pathname === "/audit" ? "#1D3557" : "transparent",
+                    color: pathname === "/audit" ? "#FFFFFF" : "#8FA9C4",
                   }}
                 >
-                  <Activity size={15} color="#6A89AB" />
-                  <span>Automated Benchmark</span>
-                </Link>
-
-                <Link
-                  href="/insights"
-                  onClick={() => setMobileOpen(false)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "7px 10px",
-                    borderRadius: 6,
-                    fontSize: 12.5,
-                    fontWeight: 500,
-                    color: "#8FA9C4",
-                  }}
-                >
-                  <Layers size={15} color="#6A89AB" />
-                  <span>Audit Insights</span>
+                  <Activity size={15} color={pathname === "/audit" ? "#A8DADC" : "#6A89AB"} />
+                  <span>Audit Trail</span>
                 </Link>
               </div>
             )}
           </div>
 
-          {/* Group 4: System & Governance */}
+          {/* Group 4: System */}
           <div
             style={{
               fontSize: 10,
@@ -526,27 +509,6 @@ export default function AppShell({ children }: AppShellProps) {
           >
             System
           </div>
-
-          <Link
-            href="/audit"
-            onClick={() => setMobileOpen(false)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: "9px 12px",
-              borderRadius: 8,
-              fontSize: 13,
-              fontWeight: pathname.startsWith("/audit") ? 700 : 500,
-              backgroundColor: pathname.startsWith("/audit") ? "#1D3557" : "transparent",
-              color: pathname.startsWith("/audit") ? "#FFFFFF" : "#9FB5CD",
-              borderLeft: pathname.startsWith("/audit") ? "3px solid #A8DADC" : "3px solid transparent",
-              transition: "all 0.15s ease",
-            }}
-          >
-            <ShieldCheck size={17} color={pathname.startsWith("/audit") ? "#A8DADC" : "#7E9AB8"} />
-            <span>Audit Trail</span>
-          </Link>
 
           <button
             onClick={() => {

@@ -8,32 +8,75 @@ import AppShell from "@/components/AppShell";
 export default function AuthGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [authorizedPath, setAuthorizedPath] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
     let active = true;
-    if (pathname === "/login") return () => { active = false; };
-    window.localStorage.removeItem("brandguard.access_token");
+
+    // Login page — no auth check needed
+    if (pathname === "/login") return;
+
     api.me().then(
-      () => { if (active) setAuthorizedPath(pathname); },
-      () => { if (active) router.replace("/login"); },
+      () => {
+        if (active) setIsAuthenticated(true);
+      },
+      () => {
+        if (active) {
+          setIsAuthenticated(false);
+          router.replace("/login");
+        }
+      }
     );
-    return () => { active = false; };
+
+    return () => {
+      active = false;
+    };
   }, [pathname, router]);
 
   useEffect(() => {
-    const handleUnauthorized = () => router.replace("/login");
+    const handleUnauthorized = () => {
+      setIsAuthenticated(false);
+      router.replace("/login");
+    };
     window.addEventListener("brandguard:unauthorized", handleUnauthorized);
     return () => window.removeEventListener("brandguard:unauthorized", handleUnauthorized);
   }, [router]);
 
-  if (pathname === "/login") return <>{children}</>;
-  if (authorizedPath === pathname) {
+  if (pathname === "/login") {
+    return <>{children}</>;
+  }
+
+  if (isAuthenticated === true) {
     return <AppShell>{children}</AppShell>;
   }
+
+  // Null = initial loading state
   return (
-    <div style={{ minHeight: "50vh", display: "grid", placeItems: "center", color: "var(--text-muted)" }}>
-      Checking your secure session...
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 14,
+        backgroundColor: "#0F1D30",
+        color: "#A8DADC",
+        fontSize: 14,
+        fontWeight: 600,
+      }}
+    >
+      <div
+        style={{
+          width: 32,
+          height: 32,
+          border: "3px solid rgba(168, 218, 220, 0.2)",
+          borderTopColor: "#A8DADC",
+          borderRadius: "50%",
+          animation: "spin 0.8s linear infinite",
+        }}
+      />
+      <span>Authenticating BrandGuard workspace session...</span>
     </div>
   );
 }

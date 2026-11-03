@@ -1,217 +1,404 @@
 "use client";
 
-import { CheckCircle2, Clock, AlertTriangle, ShieldCheck, FileText, Palette, UserCheck, Award } from "lucide-react";
+import {
+  FileText,
+  ShieldCheck,
+  Search,
+  Palette,
+  UserCheck,
+  Award,
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
+  ArrowRight,
+} from "lucide-react";
 import type { SubmissionStatus } from "@/lib/types";
 
-interface PipelineStage {
+export interface PipelineStageConfig {
+  number: string;
   id: number;
   label: string;
+  subtitle: string;
   description: string;
   icon: typeof FileText;
 }
 
-const STAGES: PipelineStage[] = [
-  { id: 1, label: "Content Submitted", description: "Copy or asset ingested", icon: FileText },
-  { id: 2, label: "Brand Rules Checked", description: "Terminology & formatting", icon: ShieldCheck },
-  { id: 3, label: "Claims Verified", description: "Evidence fact-checking", icon: ShieldCheck },
-  { id: 4, label: "Visual Identity Checked", description: "Logo, colors & contrast", icon: Palette },
-  { id: 5, label: "Human Review", description: "Findings evaluation & fixes", icon: UserCheck },
-  { id: 6, label: "Final Decision", description: "Approved or revisions needed", icon: Award },
+export const PIPELINE_STAGES: PipelineStageConfig[] = [
+  {
+    number: "01",
+    id: 1,
+    label: "Submit Content",
+    subtitle: "Intake & Extraction",
+    description: "Provide text, a document, or a creative asset.",
+    icon: FileText,
+  },
+  {
+    number: "02",
+    id: 2,
+    label: "Check Brand Rules",
+    subtitle: "Deterministic Rules",
+    description: "Check terminology, tone, formatting, and required disclaimers.",
+    icon: ShieldCheck,
+  },
+  {
+    number: "03",
+    id: 3,
+    label: "Verify Claims",
+    subtitle: "Evidence Grounding",
+    description: "Check factual claims against approved brand evidence.",
+    icon: Search,
+  },
+  {
+    number: "04",
+    id: 4,
+    label: "Check Visual Identity",
+    subtitle: "Visual & Accessibility",
+    description: "Inspect logos, colors, and accessibility contrast.",
+    icon: Palette,
+  },
+  {
+    number: "05",
+    id: 5,
+    label: "Review Findings",
+    subtitle: "Human Governance",
+    description: "Inspect issues and suggested corrections.",
+    icon: UserCheck,
+  },
+  {
+    number: "06",
+    id: 6,
+    label: "Make Final Decision",
+    subtitle: "Audit Clearance",
+    description: "Approve compliant content or request changes.",
+    icon: Award,
+  },
 ];
+
+interface PipelineProgressProps {
+  status?: SubmissionStatus;
+  currentStage?: number;
+  findingsCount?: number;
+  highSevCount?: number;
+  hasImage?: boolean;
+  className?: string;
+}
 
 export default function PipelineProgress({
   status,
+  currentStage,
   findingsCount = 0,
-}: {
-  status: SubmissionStatus;
-  findingsCount?: number;
-  hasImage?: boolean;
-}) {
-  let activeStage = 5;
+  highSevCount = 0,
+  className = "",
+}: PipelineProgressProps) {
+  // Determine active stage based on status or explicit override
+  let activeStage = currentStage ?? 5;
   let isAuditing = false;
   const isApproved = status === "approved";
   const isChangesRequested = status === "changes_requested";
 
-  if (status === "pending") {
-    activeStage = 1;
-    isAuditing = true;
-  } else if (status === "processing") {
-    activeStage = 3;
-    isAuditing = true;
-  } else if (status === "in_review") {
-    activeStage = 5;
-    isAuditing = false;
-  } else if (status === "changes_requested") {
-    activeStage = 6;
-    isAuditing = false;
-  } else if (status === "approved") {
-    activeStage = 6;
-    isAuditing = false;
+  if (status) {
+    if (status === "pending") {
+      activeStage = 1;
+      isAuditing = true;
+    } else if (status === "processing") {
+      activeStage = 3;
+      isAuditing = true;
+    } else if (status === "in_review") {
+      activeStage = 5;
+      isAuditing = false;
+    } else if (status === "changes_requested") {
+      activeStage = 6;
+      isAuditing = false;
+    } else if (status === "approved") {
+      activeStage = 6;
+      isAuditing = false;
+    }
   }
 
   return (
-    <div
-      className="card"
+    <section
+      className={`card ${className}`}
+      aria-label="6-Stage Brand Governance Pipeline"
       style={{
-        padding: "20px 24px",
+        padding: "22px 24px",
         backgroundColor: "#FFFFFF",
         border: "1px solid var(--border)",
         borderRadius: 14,
         boxShadow: "var(--shadow-sm)",
       }}
     >
-      {/* Header Bar */}
+      {/* Workflow Header with Contextual Status */}
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           flexWrap: "wrap",
-          gap: 10,
-          marginBottom: 18,
+          gap: 12,
+          marginBottom: 20,
+          paddingBottom: 14,
+          borderBottom: "1px solid #EEF2F6",
         }}
       >
-        <div>
-          <span style={{ fontSize: 14, fontWeight: 800, color: "var(--oxford-navy)", display: "block" }}>
-            Brand Governance Workflow
-          </span>
-          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
-            Standard 6-stage compliance and verification progression
-          </span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 800,
+                color: "var(--inkloom-cerulean)",
+                backgroundColor: "rgba(69, 123, 157, 0.12)",
+                padding: "2px 8px",
+                borderRadius: 4,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+              }}
+            >
+              Standard Governance Pipeline
+            </span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--inkloom-navy)" }}>
+              Continuous 6-Stage Compliance Progression
+            </span>
+          </div>
+          <p style={{ fontSize: 12, color: "var(--text-secondary)", margin: 0 }}>
+            Every asset undergoes systematic deterministic rule validation, evidence verification, visual inspection, and human approval.
+          </p>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {/* Global Lifecycle Badge */}
+        <div>
           <span
             style={{
-              fontSize: 11.5,
+              fontSize: 12,
               fontWeight: 700,
-              color: isAuditing
-                ? "var(--cerulean)"
-                : isApproved
-                ? "var(--status-success-text)"
-                : isChangesRequested
-                ? "var(--punch-red)"
-                : "var(--oxford-navy)",
-              backgroundColor: isAuditing
-                ? "var(--cerulean-dim)"
-                : isApproved
-                ? "var(--status-success-bg)"
-                : isChangesRequested
-                ? "var(--punch-dim)"
-                : "var(--frosted-dim)",
-              padding: "4px 10px",
-              borderRadius: 20,
-              display: "flex",
+              display: "inline-flex",
               alignItems: "center",
-              gap: 5,
+              gap: 6,
+              padding: "5px 12px",
+              borderRadius: 20,
+              backgroundColor: isAuditing
+                ? "rgba(69, 123, 157, 0.14)"
+                : isApproved
+                ? "#E6F4EA"
+                : isChangesRequested
+                ? "rgba(230, 57, 70, 0.12)"
+                : "rgba(29, 53, 87, 0.08)",
+              color: isAuditing
+                ? "var(--inkloom-cerulean)"
+                : isApproved
+                ? "#276749"
+                : isChangesRequested
+                ? "var(--inkloom-punch)"
+                : "var(--inkloom-navy)",
+              border: `1px solid ${
+                isAuditing
+                  ? "rgba(69, 123, 157, 0.3)"
+                  : isApproved
+                  ? "#A3D9A5"
+                  : isChangesRequested
+                  ? "rgba(230, 57, 70, 0.3)"
+                  : "rgba(29, 53, 87, 0.2)"
+              }`,
             }}
           >
-            {isAuditing && <Clock size={12} className="pulse-dot" />}
-            {isApproved && <CheckCircle2 size={12} />}
-            {isChangesRequested && <AlertTriangle size={12} />}
-            {!isAuditing && !isApproved && !isChangesRequested && <UserCheck size={12} />}
+            {isAuditing && <Clock size={13} className="animate-spin" />}
+            {isApproved && <CheckCircle2 size={13} color="#276749" />}
+            {isChangesRequested && <AlertTriangle size={13} color="var(--inkloom-punch)" />}
+            {!isAuditing && !isApproved && !isChangesRequested && <UserCheck size={13} />}
             <span>
               {isAuditing
-                ? "Audit in Progress"
+                ? "Audit Processing in Progress..."
                 : isApproved
-                ? "Compliant & Approved"
+                ? "Stage 6 Completed: Approved for Publication"
                 : isChangesRequested
-                ? "Revisions Requested"
-                : `Ready for Review (${findingsCount} issues found)`}
+                ? "Stage 6: Changes Requested by Reviewer"
+                : `Stage ${activeStage}: Human Review Queue (${findingsCount} findings)`}
             </span>
           </span>
         </div>
       </div>
 
-      {/* 6-Stage Stepper Grid */}
+      {/* Connected 6-Stage Stepper Track */}
       <div
+        className="pipeline-stages-container"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(6, 1fr)",
-          gap: 8,
-          alignItems: "start",
+          gap: 10,
+          position: "relative",
         }}
-        className="pipeline-stages-grid"
       >
-        {STAGES.map((stage) => {
+        {PIPELINE_STAGES.map((stage, idx) => {
           const Icon = stage.icon;
           const isDone = stage.id < activeStage || (stage.id === 6 && (isApproved || isChangesRequested));
           const isCurrent = stage.id === activeStage && !isDone;
+          const isBlocked = stage.id === 6 && activeStage === 5 && highSevCount > 0;
 
-          let badgeBg = "#F1F5F9";
-          let badgeColor = "#64748B";
-          let borderStyle = "1px solid #E2E8F0";
+          // Visual states
+          let stateLabel = "Pending";
+          let circleBg = "#F1F5F9";
+          let circleColor = "#64748B";
+          let cardBg = "#FFFFFF";
+          let borderColor = "#E2E8F0";
 
           if (isDone) {
-            badgeBg = "var(--status-success-bg)";
-            badgeColor = "var(--status-success-text)";
-            borderStyle = "1px solid var(--status-success-border)";
+            stateLabel = "Completed";
+            circleBg = "#2E7D32";
+            circleColor = "#FFFFFF";
+            cardBg = "#F7FBF7";
+            borderColor = "#C8E6C9";
           } else if (isCurrent) {
-            badgeBg = isAuditing ? "var(--cerulean-dim)" : "var(--oxford-navy)";
-            badgeColor = isAuditing ? "var(--cerulean)" : "#FFFFFF";
-            borderStyle = "1.5px solid var(--cerulean)";
+            stateLabel = isAuditing ? "Processing" : "Active";
+            circleBg = isAuditing ? "#457B9D" : "#1D3557";
+            circleColor = "#FFFFFF";
+            cardBg = isAuditing ? "#F0F7FB" : "#F4F7FB";
+            borderColor = "#457B9D";
+          } else if (isBlocked) {
+            stateLabel = "Blocked";
+            circleBg = "#FFEBEE";
+            circleColor = "#D32F2F";
+            cardBg = "#FFF8F8";
+            borderColor = "#FFCDD2";
           }
 
           return (
             <div
               key={stage.id}
               style={{
+                position: "relative",
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "center",
-                textAlign: "center",
-                position: "relative",
+                gap: 8,
+                padding: "14px 12px 16px",
+                borderRadius: 10,
+                backgroundColor: cardBg,
+                border: `1.5px solid ${borderColor}`,
+                boxShadow: isCurrent ? "0 2px 8px rgba(69, 123, 157, 0.16)" : "none",
+                transition: "all 0.2s ease",
               }}
             >
-              {/* Stage Circle */}
-              <div
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: "50%",
-                  backgroundColor: badgeBg,
-                  color: badgeColor,
-                  border: borderStyle,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 12,
-                  fontWeight: 800,
-                  marginBottom: 6,
-                  transition: "all 0.2s ease",
-                }}
-              >
-                {isDone ? <CheckCircle2 size={16} /> : isCurrent && isAuditing ? <Clock size={16} className="pulse-dot" /> : <Icon size={15} />}
+              {/* Top row: Stage Number & Status Badge */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div
+                    style={{
+                      width: 26,
+                      height: 26,
+                      borderRadius: "50%",
+                      backgroundColor: circleBg,
+                      color: circleColor,
+                      fontSize: 11.5,
+                      fontWeight: 800,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {isDone ? <CheckCircle2 size={15} /> : stage.number}
+                  </div>
+                  <Icon size={14} color={isCurrent ? "var(--inkloom-cerulean)" : isDone ? "#2E7D32" : "#7E9AB8"} />
+                </div>
+
+                <span
+                  style={{
+                    fontSize: 9.5,
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.04em",
+                    padding: "2px 6px",
+                    borderRadius: 4,
+                    backgroundColor: isDone
+                      ? "#E8F5E9"
+                      : isCurrent
+                      ? "rgba(69, 123, 157, 0.14)"
+                      : isBlocked
+                      ? "#FFEBEE"
+                      : "#F1F5F9",
+                    color: isDone
+                      ? "#2E7D32"
+                      : isCurrent
+                      ? "var(--inkloom-cerulean)"
+                      : isBlocked
+                      ? "#D32F2F"
+                      : "#64748B",
+                  }}
+                >
+                  {stateLabel}
+                </span>
               </div>
 
-              {/* Stage Title */}
-              <span
-                style={{
-                  fontSize: 11.5,
-                  fontWeight: isCurrent ? 800 : 700,
-                  color: isCurrent ? "var(--oxford-navy)" : isDone ? "var(--oxford-navy)" : "var(--text-muted)",
-                  lineHeight: 1.25,
-                }}
-              >
-                {stage.id}. {stage.label}
-              </span>
+              {/* Stage Title & Subtitle */}
+              <div style={{ marginTop: 2 }}>
+                <div
+                  style={{
+                    fontSize: 12.5,
+                    fontWeight: 800,
+                    color: isCurrent ? "var(--inkloom-navy)" : isDone ? "#1E3A1E" : "#334155",
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {stage.label}
+                </div>
+                <div style={{ fontSize: 10.5, fontWeight: 600, color: "var(--inkloom-cerulean)", marginTop: 1 }}>
+                  {stage.subtitle}
+                </div>
+              </div>
 
-              {/* Stage Subtitle */}
-              <span
+              {/* Concise Explanation */}
+              <p
                 style={{
-                  fontSize: 10,
-                  color: "var(--text-muted)",
-                  marginTop: 3,
-                  lineHeight: 1.2,
-                  display: "block",
+                  fontSize: 11,
+                  color: "var(--text-secondary)",
+                  lineHeight: 1.35,
+                  margin: "4px 0 0",
+                  flex: 1,
                 }}
               >
                 {stage.description}
-              </span>
+              </p>
+
+              {/* Connector Arrow (desktop) */}
+              {idx < PIPELINE_STAGES.length - 1 && (
+                <div
+                  className="pipeline-connector-arrow"
+                  style={{
+                    position: "absolute",
+                    top: "50%",
+                    right: -10,
+                    transform: "translateY(-50%)",
+                    zIndex: 2,
+                    color: isDone ? "#2E7D32" : "#CBD5E1",
+                    backgroundColor: "#FFFFFF",
+                    borderRadius: "50%",
+                    padding: 1,
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                  }}
+                >
+                  <ArrowRight size={14} />
+                </div>
+              )}
             </div>
           );
         })}
       </div>
-    </div>
+
+      {/* Responsive Style Overrides */}
+      <style jsx>{`
+        @media (max-width: 1024px) {
+          .pipeline-stages-container {
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+          .pipeline-connector-arrow {
+            display: none !important;
+          }
+        }
+        @media (max-width: 640px) {
+          .pipeline-stages-container {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+    </section>
   );
 }

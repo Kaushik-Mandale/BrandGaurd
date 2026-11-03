@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
 import { errMsg } from "@/lib/ui";
+import PipelineProgress from "@/components/PipelineProgress";
 import {
   ArrowLeft,
   FileText,
@@ -57,13 +58,9 @@ export default function SubmitPage() {
     }
 
     setLoading(true);
-    setAuditStage("1. Ingesting content and extracting text...");
+    setAuditStage("Submitting content to BrandGuard compliance engine...");
 
     try {
-      setTimeout(() => setAuditStage("2. Checking terminology and brand rules..."), 600);
-      setTimeout(() => setAuditStage("3. Verifying claims against approved evidence..."), 1200);
-      setTimeout(() => setAuditStage("4. Inspecting visual elements, logos and contrast..."), 1800);
-
       let res: { id: number; status: string };
       const fullText = contextNote.trim()
         ? `[Context: ${contextNote.trim()}]\n\n${text}`
@@ -75,7 +72,7 @@ export default function SubmitPage() {
         res = await api.uploadSubmission(file!, title.trim() || file!.name);
       }
 
-      setAuditStage("Audit complete! Opening review workspace...");
+      setAuditStage("Content received! Navigating to live audit review...");
       router.push(`/review/${res.id}`);
     } catch (err) {
       setError(errMsg(err));
@@ -140,6 +137,9 @@ export default function SubmitPage() {
           Your content will be checked against your approved brand guidelines and factual evidence. You will be able to review the findings and apply corrections before making a final sign-off decision.
         </p>
       </motion.div>
+
+      {/* 6-Stage Workflow Stepper: Stage 1 Active */}
+      <PipelineProgress currentStage={1} />
 
       {/* Submission Mode Selector */}
       <div
