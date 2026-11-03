@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Finding } from "@/lib/types";
-import { FindingStatusBadge, SeverityBadge, TypeBadge, Badge } from "./Badges";
+import { FindingStatusBadge, SeverityBadge, TypeBadge, Badge, ClaimStateBadge } from "./Badges";
 import { Edit3, Check, X } from "lucide-react";
 
 interface Props {
@@ -34,6 +34,12 @@ export default function FindingCard({
   const resolved = f.status !== "open";
   const canAct = editable && f.status === "open";
 
+  const isClaim = f.type === "claim" || f.message.startsWith("[");
+  let claimState = "contradicted";
+  if (f.message.includes("[SUPPORTED]")) claimState = "supported";
+  else if (f.message.includes("[UNSUPPORTED]")) claimState = "unsupported";
+  else if (f.message.includes("[UNCERTAIN]")) claimState = "uncertain";
+
   return (
     <div
       id={`card-${f.id}`}
@@ -60,13 +66,19 @@ export default function FindingCard({
         )}
       </div>
 
+      {isClaim && (
+        <div style={{ marginTop: 8 }}>
+          <ClaimStateBadge state={claimState} />
+        </div>
+      )}
+
       {!isAppend && f.flagged_text && (
         <p style={{ marginTop: 10, fontSize: 13.5, fontWeight: 700, color: "var(--oxford-navy)" }}>
           “{f.flagged_text}”
         </p>
       )}
       <p style={{ marginTop: 4, fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5 }}>
-        {f.message}
+        {f.message.replace(/^\[[A-Z_]+\]\s*/, "")}
       </p>
 
       {(f.evidence_quote || f.citation_title) && (

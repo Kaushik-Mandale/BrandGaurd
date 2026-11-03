@@ -62,5 +62,28 @@
      {"type": "claim", "contains": "immunity"},
      {"type": "claim", "contains": "30g"},
      {"type": "number_date", "contains": "rs 199"},
-     {"type": "claim", "contains": "disclaimer"}]}
+     {"type": "claim", "contains": "disclaimer"}]},
+  {"title": "E13 clean: member pricing and launch",
+   "text": "Join our members on 12 March 2026 for the new Chocolate batch. Each bar is Rs. 199.00 with 20g of plant-based protein.",
+   "expected": []},
+  {"title": "E14 slang violation: crushing it",
+   "text": "You are crushing it today with your workout! Fuel up with a FitFuel bar.",
+   "expected": [
+     {"type": "terminology", "contains": "crushing it"}]},
+  {"title": "E15 slash date violation",
+   "text": "Special member discounts end on 15/04/2026 across all retail stores.",
+   "expected": [
+     {"type": "number_date", "contains": "15/04/2026"}]},
+  {"title": "E16 unformatted price and percent space",
+   "text": "Order now for Rs 249 and get 15 % off your next subscription delivery.",
+   "expected": [
+     {"type": "number_date", "contains": "rs 249"},
+     {"type": "number_date", "contains": "15 %"}]},
+  {"title": "E17 excessive exclamation punctuation",
+   "text": "Fuel your morning with healthy plant-based nutrition today!!!",
+   "expected": [
+     {"type": "regex", "contains": "!!!"}]},
+  {"title": "E18 clean: plant-based ingredients",
+   "text": "FitFuel protein bars are made from wholesome peas and brown rice, with no artificial sweeteners and zero palm oil.",
+   "expected": []}
 ]

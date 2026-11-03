@@ -9,6 +9,8 @@
    "description": "FitFuel must never claim to cure, treat or prevent disease."},
   {"kind": "banned_term", "pattern": "beast mode", "severity": "low",
    "description": "Slang such as 'beast mode' is not allowed in official copy."},
+  {"kind": "banned_term", "pattern": "crushing it", "severity": "low",
+   "description": "Slang such as 'crushing it' is not allowed in official copy."},
   {"kind": "preferred_term", "pattern": "energy bars", "replacement": "protein bars", "severity": "medium",
    "description": "Our products are called 'protein bars', never 'energy bars'."},
   {"kind": "preferred_term", "pattern": "diet bars", "replacement": "protein bars", "severity": "medium",

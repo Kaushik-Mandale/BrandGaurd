@@ -867,7 +867,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
                   </div>
 
                   {/* Evidence Citation from RAG */}
-                  {f.evidence_quote && (
+                  {(f.evidence_quote || f.citation_title) && (
                     <div
                       style={{
                         padding: "10px 12px",
@@ -881,9 +881,11 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
                         <BookOpen size={13} color="var(--inkloom-cerulean)" />
                         <span>Verified Brand Knowledge Citation:</span>
                       </div>
-                      <p style={{ color: "var(--text-secondary)", fontStyle: "italic", lineHeight: 1.5 }}>
-                        &ldquo;{f.evidence_quote}&rdquo;
-                      </p>
+                      {f.evidence_quote && (
+                        <p style={{ color: "var(--text-secondary)", fontStyle: "italic", lineHeight: 1.5 }}>
+                          &ldquo;{f.evidence_quote}&rdquo;
+                        </p>
+                      )}
                       {f.citation_title && (
                         <div style={{ color: "var(--text-muted)", fontSize: 11, marginTop: 4 }}>
                           Source: {f.citation_title} {f.citation_page ? `(Page ${f.citation_page})` : ""}

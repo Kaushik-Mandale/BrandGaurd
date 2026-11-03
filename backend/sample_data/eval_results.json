@@ -1,27 +1,27 @@
 {
-  "dataset_version": "v2.1",
-  "sample_count": 12,
-  "executed_at": "2026-11-03T03:05:12Z",
-  "duration_seconds": 0.0,
-  "precision": 0.8571,
-  "recall": 0.6429,
-  "f1": 0.7347,
-  "false_positive_rate": 0.1429,
-  "tp": 18,
+  "dataset_version": "v2.2",
+  "sample_count": 18,
+  "executed_at": "2026-11-03T04:45:57Z",
+  "duration_seconds": 0.01,
+  "precision": 0.88,
+  "recall": 0.6667,
+  "f1": 0.7586,
+  "false_positive_rate": 0.12,
+  "tp": 22,
   "fp": 3,
-  "fn": 10,
-  "clean_posts_total": 3,
-  "clean_posts_passed": 3,
+  "fn": 11,
+  "clean_posts_total": 5,
+  "clean_posts_passed": 5,
   "clean_posts_accuracy": 1.0,
-  "passed_regression": false,
+  "passed_regression": true,
   "by_type": {
     "terminology": {
-      "tp": 11,
+      "tp": 12,
       "fp": 1,
       "fn": 0
     },
     "regex": {
-      "tp": 1,
+      "tp": 2,
       "fp": 0,
       "fn": 0
     },
@@ -31,9 +31,9 @@
       "fn": 7
     },
     "number_date": {
-      "tp": 4,
+      "tp": 6,
       "fp": 0,
-      "fn": 1
+      "fn": 2
     },
     "tone": {
       "tp": 0,
@@ -201,6 +201,59 @@
           "contains": "30g"
         }
       ],
+      "false_positives": []
+    },
+    {
+      "title": "E13 clean: member pricing and launch",
+      "failed": false,
+      "findings_count": 0,
+      "expected_count": 0,
+      "missed": [],
+      "false_positives": []
+    },
+    {
+      "title": "E14 slang violation: crushing it",
+      "failed": false,
+      "findings_count": 1,
+      "expected_count": 1,
+      "missed": [],
+      "false_positives": []
+    },
+    {
+      "title": "E15 slash date violation",
+      "failed": false,
+      "findings_count": 1,
+      "expected_count": 1,
+      "missed": [],
+      "false_positives": []
+    },
+    {
+      "title": "E16 unformatted price and percent space",
+      "failed": true,
+      "findings_count": 1,
+      "expected_count": 2,
+      "missed": [
+        {
+          "type": "number_date",
+          "contains": "15 %"
+        }
+      ],
+      "false_positives": []
+    },
+    {
+      "title": "E17 excessive exclamation punctuation",
+      "failed": false,
+      "findings_count": 1,
+      "expected_count": 1,
+      "missed": [],
+      "false_positives": []
+    },
+    {
+      "title": "E18 clean: plant-based ingredients",
+      "failed": false,
+      "findings_count": 0,
+      "expected_count": 0,
+      "missed": [],
       "false_positives": []
     }
   ]

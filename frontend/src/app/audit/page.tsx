@@ -15,6 +15,9 @@ import {
   FileText,
   MessageSquare,
   ChevronDown,
+  Sparkles,
+  AlertTriangle,
+  User,
 } from "lucide-react";
 
 export default function AuditPage() {
@@ -63,6 +66,74 @@ export default function AuditPage() {
     if (filterAction === "all") return true;
     return e.action.toLowerCase().includes(filterAction.toLowerCase());
   });
+
+  function getEventSummary(entry: AuditEntry): { title: string; subtitle?: string; isCleanPass?: boolean } {
+    const d = (entry.details || {}) as Record<string, unknown>;
+    const action = entry.action.toLowerCase();
+
+    if (action === "review_completed" || action === "audit_pipeline_completed") {
+      const findingsCount = Number(d.findings ?? d.findings_count ?? 0);
+      const droppedCount = Number(d.dropped_by_verifier ?? 0);
+      if (findingsCount === 0) {
+        return {
+          title: "Clean Baseline Pass — 0 Violations Detected",
+          subtitle: "Content fully satisfied all active brand rules, approved claims, and formatting standards with zero false positives.",
+          isCleanPass: true,
+        };
+      }
+      return {
+        title: `Compliance Review Completed — ${findingsCount} Violation${findingsCount > 1 ? "s" : ""} Flagged`,
+        subtitle: `${d.rule_findings ?? 0} Rule violations · ${d.ai_findings ?? 0} AI findings · ${d.vision_findings ?? 0} Vision checks · ${droppedCount} dropped by verifier`,
+      };
+    }
+
+    if (action === "submission_created") {
+      return {
+        title: `Submission Created: “${d.title || "Untitled"}”`,
+        subtitle: `${d.char_count ?? 0} characters queued for compliance intake`,
+      };
+    }
+
+    if (action === "submission_approved") {
+      return {
+        title: "Content Approved for Publication",
+        subtitle: `Approved by ${d.approved_by || "Reviewer"}${d.override ? " (with managerial override: " + d.override_reason + ")" : ""}`,
+      };
+    }
+
+    if (action === "changes_requested") {
+      return {
+        title: "Changes Requested by Reviewer",
+        subtitle: String(d.note || d.reason || "Revisions required before brand signoff"),
+      };
+    }
+
+    if (action === "finding_accepted") {
+      return {
+        title: "AI Suggested Fix Applied",
+        subtitle: d.suggested_text ? `Replaced with: “${d.suggested_text}”` : "Proposed correction adopted",
+      };
+    }
+
+    if (action === "finding_rejected") {
+      return {
+        title: "Finding Dismissed by Reviewer",
+        subtitle: "Reviewer deemed proposed finding non-actionable or intentional exception",
+      };
+    }
+
+    if (action === "comment_added") {
+      return {
+        title: "Reviewer Feedback Logged",
+        subtitle: String(d.text || "Compliance note recorded"),
+      };
+    }
+
+    return {
+      title: entry.action.replace(/_/g, " ").toUpperCase(),
+      subtitle: JSON.stringify(d).slice(0, 100),
+    };
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
@@ -114,18 +185,18 @@ export default function AuditPage() {
             }}
           >
             <ShieldCheck size={13} color="var(--cerulean)" />
-            <span>Governance & Compliance Records</span>
+            <span>Immutable Governance Record</span>
           </div>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: "var(--oxford-navy)", letterSpacing: "-0.035em" }}>
-            Audit Trail & Decision History
+            Audit Trail &amp; Decision History
           </h1>
           <p style={{ color: "var(--text-secondary)", marginTop: 6, maxWidth: 640, fontSize: 14.5 }}>
-            Every submission, rule trigger, AI proposal, reviewer sign-off, force override, and revision is persistently recorded for regulatory accountability.
+            Tamper-evident log of all compliance pipeline runs, evidence verification verdicts, reviewer approvals, manual revisions, and feedback events.
           </p>
         </div>
         <button onClick={loadAudit} className="btn btn-secondary" style={{ padding: "10px 18px" }}>
           <RotateCw size={14} />
-          <span>Refresh History</span>
+          <span>Refresh Trail</span>
         </button>
       </motion.div>
 
@@ -135,21 +206,23 @@ export default function AuditPage() {
         </div>
       )}
 
-      {/* Main Audit List */}
+      {/* Audit Log Card */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
+        transition={{ delay: 0.1 }}
         className="card"
         style={{ display: "flex", flexDirection: "column", gap: 20 }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 800, color: "var(--oxford-navy)" }}>
-            Activity Stream ({filtered.length})
-          </h2>
+          <span style={{ fontSize: 14, fontWeight: 700, color: "var(--oxford-navy)" }}>
+            Logged Audit Events ({filtered.length})
+          </span>
+
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {[
               { id: "all", label: "All Events" },
+              { id: "completed", label: "Reviews" },
               { id: "accept", label: "Accepted Fixes" },
               { id: "reject", label: "Dismissals" },
               { id: "approve", label: "Approvals" },
@@ -165,7 +238,7 @@ export default function AuditPage() {
                   cursor: "pointer",
                   fontSize: 12,
                   fontWeight: filterAction === f.id ? 700 : 500,
-                  backgroundColor: filterAction === f.id ? "var(--cerulean)" : "var(--bg-subtle)",
+                  backgroundColor: filterAction === f.id ? "var(--oxford-navy)" : "var(--bg-subtle)",
                   color: filterAction === f.id ? "#FFFFFF" : "var(--text-secondary)",
                   transition: "all var(--transition-fast)",
                 }}
@@ -188,19 +261,31 @@ export default function AuditPage() {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {filtered.map((entry, idx) => {
+              const summary = getEventSummary(entry);
+
               let badgeColor = "var(--status-info-text)";
               let badgeBg = "var(--status-info-bg)";
               let Icon = FileText;
 
-              if (entry.action.includes("accept") || entry.action.includes("approve")) {
+              if (summary.isCleanPass || entry.action.includes("approve")) {
                 badgeColor = "var(--status-success-text)";
                 badgeBg = "var(--status-success-bg)";
                 Icon = CheckCircle2;
+              } else if (entry.action.includes("accept")) {
+                badgeColor = "var(--status-success-text)";
+                badgeBg = "var(--status-success-bg)";
+                Icon = Sparkles;
               } else if (entry.action.includes("reject") || entry.action.includes("fail")) {
-                badgeColor = "var(--status-danger-text)";
-                badgeBg = "var(--status-danger-bg)";
+                badgeColor = "var(--punch-red)";
+                badgeBg = "var(--punch-dim)";
                 Icon = XCircle;
+              } else if (entry.action.includes("changes_requested")) {
+                badgeColor = "var(--status-warning-text, #D97706)";
+                badgeBg = "var(--status-warning-bg, #FEF3C7)";
+                Icon = AlertTriangle;
               } else if (entry.action.includes("comment")) {
+                badgeColor = "var(--cerulean)";
+                badgeBg = "var(--cerulean-dim)";
                 Icon = MessageSquare;
               }
 
@@ -215,27 +300,29 @@ export default function AuditPage() {
                   style={{
                     display: "flex",
                     flexDirection: "column",
-                    padding: "14px 18px",
+                    padding: "16px 20px",
                     borderRadius: "var(--radius-sm)",
-                    backgroundColor: "var(--bg-card)",
-                    border: "1px solid var(--border)",
-                    boxShadow: "var(--shadow-xs)",
+                    backgroundColor: isExpanded ? "#FFFFFF" : "var(--bg-card)",
+                    border: isExpanded ? "1px solid var(--cerulean)" : "1px solid var(--border)",
+                    boxShadow: isExpanded ? "var(--shadow-cerulean)" : "var(--shadow-xs)",
+                    transition: "all var(--transition-fast)",
                   }}
                 >
                   <div
                     style={{
                       display: "flex",
-                      alignItems: "center",
+                      alignItems: "flex-start",
                       justifyContent: "space-between",
                       cursor: "pointer",
+                      gap: 12,
                     }}
                     onClick={() => setExpandedId(isExpanded ? null : entry.id)}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
                       <span
                         style={{
-                          width: 32,
-                          height: 32,
+                          width: 36,
+                          height: 36,
                           borderRadius: 8,
                           backgroundColor: badgeBg,
                           color: badgeColor,
@@ -243,15 +330,30 @@ export default function AuditPage() {
                           alignItems: "center",
                           justifyContent: "center",
                           flexShrink: 0,
+                          marginTop: 2,
                         }}
                       >
-                        <Icon size={16} />
+                        <Icon size={18} />
                       </span>
 
                       <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--oxford-navy)" }}>
-                            {entry.action.replace(/_/g, " ").toUpperCase()}
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: "var(--oxford-navy)" }}>
+                            {summary.title}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: 10.5,
+                              fontWeight: 700,
+                              textTransform: "uppercase",
+                              padding: "2px 7px",
+                              borderRadius: 4,
+                              backgroundColor: "var(--bg-subtle)",
+                              color: "var(--text-muted)",
+                              border: "1px solid var(--border)",
+                            }}
+                          >
+                            {entry.action.replace(/_/g, " ")}
                           </span>
                           {entry.submission_id && (
                             <Link
@@ -260,7 +362,7 @@ export default function AuditPage() {
                               style={{
                                 fontSize: 12,
                                 color: "var(--cerulean)",
-                                fontWeight: 600,
+                                fontWeight: 700,
                                 display: "inline-flex",
                                 alignItems: "center",
                                 gap: 3,
@@ -271,15 +373,28 @@ export default function AuditPage() {
                             </Link>
                           )}
                         </div>
-                        <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
-                          {fmtDate(entry.created_at)}
+
+                        {summary.subtitle && (
+                          <div style={{ fontSize: 12.5, color: "var(--text-secondary)", marginTop: 4, lineHeight: 1.4 }}>
+                            {summary.subtitle}
+                          </div>
+                        )}
+
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 11.5, color: "var(--text-muted)", marginTop: 6 }}>
+                          <span>{fmtDate(entry.created_at)}</span>
+                          {entry.user_id && (
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                              <User size={11} />
+                              <span>Actor ID #{entry.user_id}</span>
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                        {isExpanded ? "Collapse" : "Details"}
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, marginTop: 4 }}>
+                      <span style={{ fontSize: 11.5, color: "var(--text-muted)", fontWeight: 600 }}>
+                        {isExpanded ? "Collapse" : "Inspect Payload"}
                       </span>
                       <ChevronDown
                         size={14}
@@ -299,10 +414,10 @@ export default function AuditPage() {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--border-subtle)" }}
+                        style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--border-subtle)" }}
                       >
-                        <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text-muted)", marginBottom: 4 }}>
-                          EVENT METADATA & ACTOR RECORD:
+                        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                          Persisted Telemetry &amp; Verification Payload:
                         </div>
                         <pre
                           style={{
