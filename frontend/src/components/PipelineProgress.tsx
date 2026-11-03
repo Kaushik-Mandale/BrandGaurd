@@ -1,93 +1,83 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { CheckCircle2, Clock, XCircle, Sparkles } from "lucide-react";
+import { CheckCircle2, Clock, AlertTriangle, ShieldCheck, FileText, Palette, UserCheck, Award } from "lucide-react";
 import type { SubmissionStatus } from "@/lib/types";
 
-interface PipelineStep {
+interface PipelineStage {
   id: number;
   label: string;
-  subtext: string;
+  description: string;
+  icon: typeof FileText;
 }
 
-const STEPS: PipelineStep[] = [
-  { id: 1, label: "Content Intake", subtext: "Ingestion & payload validation" },
-  { id: 2, label: "Extraction", subtext: "OCR, spans & page mapping" },
-  { id: 3, label: "Rule Engine", subtext: "Deterministic terminology & regex" },
-  { id: 4, label: "Claim & RAG", subtext: "pgvector similarity over facts" },
-  { id: 5, label: "Visual & A11y", subtext: "CIELAB palette, logo & WCAG" },
-  { id: 6, label: "Findings Aggregation", subtext: "Deduplication & scoring" },
-  { id: 7, label: "Intent-Preserving Fixes", subtext: "Minimal localized edits" },
-  { id: 8, label: "Human Review", subtext: "Editorial sign-off & feedback" },
-  { id: 9, label: "Final Decision", subtext: "Approved or revision requested" },
+const STAGES: PipelineStage[] = [
+  { id: 1, label: "Content Submitted", description: "Copy or asset ingested", icon: FileText },
+  { id: 2, label: "Brand Rules Checked", description: "Terminology & formatting", icon: ShieldCheck },
+  { id: 3, label: "Claims Verified", description: "Evidence fact-checking", icon: ShieldCheck },
+  { id: 4, label: "Visual Identity Checked", description: "Logo, colors & contrast", icon: Palette },
+  { id: 5, label: "Human Review", description: "Findings evaluation & fixes", icon: UserCheck },
+  { id: 6, label: "Final Decision", description: "Approved or revisions needed", icon: Award },
 ];
 
 export default function PipelineProgress({
   status,
   findingsCount = 0,
-  hasImage = false,
 }: {
   status: SubmissionStatus;
   findingsCount?: number;
   hasImage?: boolean;
 }) {
-  let currentStep = 9;
-  let isProcessing = false;
-  const isFailed = status === "failed";
+  let activeStage = 5;
+  let isAuditing = false;
   const isApproved = status === "approved";
+  const isChangesRequested = status === "changes_requested";
 
   if (status === "pending") {
-    currentStep = 1;
-    isProcessing = true;
+    activeStage = 1;
+    isAuditing = true;
   } else if (status === "processing") {
-    currentStep = 4;
-    isProcessing = true;
-  } else if (status === "in_review" || status === "changes_requested") {
-    currentStep = 8;
-    isProcessing = false;
+    activeStage = 3;
+    isAuditing = true;
+  } else if (status === "in_review") {
+    activeStage = 5;
+    isAuditing = false;
+  } else if (status === "changes_requested") {
+    activeStage = 6;
+    isAuditing = false;
   } else if (status === "approved") {
-    currentStep = 9;
-    isProcessing = false;
+    activeStage = 6;
+    isAuditing = false;
   }
 
   return (
     <div
       className="card"
       style={{
-        padding: "22px 26px",
-        backgroundColor: "var(--bg-card)",
+        padding: "20px 24px",
+        backgroundColor: "#FFFFFF",
         border: "1px solid var(--border)",
-        display: "flex",
-        flexDirection: "column",
-        gap: 16,
-        borderRadius: "var(--radius-md)",
+        borderRadius: 14,
         boxShadow: "var(--shadow-sm)",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: "50%",
-              backgroundColor: "var(--cerulean-dim)",
-              color: "var(--cerulean)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Sparkles size={15} />
-          </div>
-          <div>
-            <span style={{ fontSize: 14, fontWeight: 800, color: "var(--oxford-navy)", display: "block" }}>
-              Multi-Stage Compliance Analysis Flow
-            </span>
-            <span style={{ fontSize: 11.5, color: "var(--text-muted)" }}>
-              Deterministic + RAG Evidence Grounding + Human Approval Gates
-            </span>
-          </div>
+      {/* Header Bar */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 10,
+          marginBottom: 18,
+        }}
+      >
+        <div>
+          <span style={{ fontSize: 14, fontWeight: 800, color: "var(--oxford-navy)", display: "block" }}>
+            Brand Governance Workflow
+          </span>
+          <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            Standard 6-stage compliance and verification progression
+          </span>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -95,131 +85,130 @@ export default function PipelineProgress({
             style={{
               fontSize: 11.5,
               fontWeight: 700,
-              color: isProcessing ? "var(--cerulean)" : isApproved ? "var(--status-success-text)" : isFailed ? "var(--punch-red)" : "var(--oxford-navy)",
-              backgroundColor: isProcessing ? "var(--cerulean-dim)" : isApproved ? "var(--status-success-bg)" : isFailed ? "var(--punch-dim)" : "var(--frosted-dim)",
+              color: isAuditing
+                ? "var(--cerulean)"
+                : isApproved
+                ? "var(--status-success-text)"
+                : isChangesRequested
+                ? "var(--punch-red)"
+                : "var(--oxford-navy)",
+              backgroundColor: isAuditing
+                ? "var(--cerulean-dim)"
+                : isApproved
+                ? "var(--status-success-bg)"
+                : isChangesRequested
+                ? "var(--punch-dim)"
+                : "var(--frosted-dim)",
               padding: "4px 10px",
-              borderRadius: 9999,
-              border: `1px solid ${isProcessing ? "var(--frosted-border)" : isApproved ? "var(--status-success-border)" : isFailed ? "var(--punch-border)" : "var(--frosted-border)"}`,
-              display: "inline-flex",
+              borderRadius: 20,
+              display: "flex",
               alignItems: "center",
-              gap: 6,
+              gap: 5,
             }}
           >
-            {isProcessing && <span className="pulse-dot" style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "var(--cerulean)" }} />}
-            {isApproved && <CheckCircle2 size={13} />}
-            {isFailed && <XCircle size={13} />}
-            <span>{isProcessing ? "Analyzing Live" : isApproved ? "Sign-off Approved" : isFailed ? "Analysis Failed" : "Awaiting Human Review"}</span>
-          </span>
-
-          <span style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 600 }}>
-            {findingsCount} {findingsCount === 1 ? "finding" : "findings"} • {hasImage ? "Multi-modal vision" : "Copy audit"}
+            {isAuditing && <Clock size={12} className="pulse-dot" />}
+            {isApproved && <CheckCircle2 size={12} />}
+            {isChangesRequested && <AlertTriangle size={12} />}
+            {!isAuditing && !isApproved && !isChangesRequested && <UserCheck size={12} />}
+            <span>
+              {isAuditing
+                ? "Audit in Progress"
+                : isApproved
+                ? "Compliant & Approved"
+                : isChangesRequested
+                ? "Revisions Requested"
+                : `Ready for Review (${findingsCount} issues found)`}
+            </span>
           </span>
         </div>
       </div>
 
-      {/* 9-Stage Flowing Interactive Stepper */}
+      {/* 6-Stage Stepper Grid */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(9, minmax(110px, 1fr))",
-          gap: 6,
-          overflowX: "auto",
-          paddingBottom: 6,
+          gridTemplateColumns: "repeat(6, 1fr)",
+          gap: 8,
+          alignItems: "start",
         }}
+        className="pipeline-stages-grid"
       >
-        {STEPS.map((step, idx) => {
-          const isDone = !isProcessing && (currentStep > step.id || (currentStep === 9 && !isFailed));
-          const isActive = isProcessing && currentStep === step.id;
+        {STAGES.map((stage) => {
+          const Icon = stage.icon;
+          const isDone = stage.id < activeStage || (stage.id === 6 && (isApproved || isChangesRequested));
+          const isCurrent = stage.id === activeStage && !isDone;
 
-          let badgeBg = "var(--bg-subtle)";
-          let badgeBorder = "var(--border)";
-          let badgeColor = "var(--text-muted)";
-          let barBg = "var(--border-subtle)";
+          let badgeBg = "#F1F5F9";
+          let badgeColor = "#64748B";
+          let borderStyle = "1px solid #E2E8F0";
 
           if (isDone) {
             badgeBg = "var(--status-success-bg)";
-            badgeBorder = "var(--status-success-border)";
             badgeColor = "var(--status-success-text)";
-            barBg = "var(--cerulean)";
-          } else if (isActive) {
-            badgeBg = "var(--cerulean-dim)";
-            badgeBorder = "var(--cerulean)";
-            badgeColor = "var(--cerulean)";
-            barBg = "var(--cerulean)";
+            borderStyle = "1px solid var(--status-success-border)";
+          } else if (isCurrent) {
+            badgeBg = isAuditing ? "var(--cerulean-dim)" : "var(--oxford-navy)";
+            badgeColor = isAuditing ? "var(--cerulean)" : "#FFFFFF";
+            borderStyle = "1.5px solid var(--cerulean)";
           }
 
           return (
-            <motion.div
-              key={step.id}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25, delay: idx * 0.03 }}
+            <div
+              key={stage.id}
               style={{
                 display: "flex",
                 flexDirection: "column",
-                gap: 6,
-                padding: "8px 6px",
-                borderRadius: "var(--radius-sm)",
-                backgroundColor: isActive ? "rgba(69, 123, 157, 0.05)" : "transparent",
+                alignItems: "center",
+                textAlign: "center",
+                position: "relative",
               }}
             >
-              {/* Connector Bar */}
+              {/* Stage Circle */}
               <div
                 style={{
-                  height: 4,
-                  borderRadius: 2,
-                  backgroundColor: barBg,
-                  transition: "background-color 0.3s ease",
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  backgroundColor: badgeBg,
+                  color: badgeColor,
+                  border: borderStyle,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 12,
+                  fontWeight: 800,
+                  marginBottom: 6,
+                  transition: "all 0.2s ease",
                 }}
-              />
-
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span
-                  style={{
-                    width: 22,
-                    height: 22,
-                    borderRadius: "50%",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 10.5,
-                    fontWeight: 700,
-                    backgroundColor: badgeBg,
-                    border: `1px solid ${badgeBorder}`,
-                    color: badgeColor,
-                    flexShrink: 0,
-                  }}
-                >
-                  {isDone ? <CheckCircle2 size={13} /> : isActive ? <Clock size={13} className="pulse-dot" /> : step.id}
-                </span>
-
-                <span
-                  style={{
-                    fontSize: 11.5,
-                    fontWeight: isActive || isDone ? 700 : 600,
-                    color: isActive ? "var(--cerulean)" : isDone ? "var(--oxford-navy)" : "var(--text-muted)",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                  title={step.label}
-                >
-                  {step.label}
-                </span>
+              >
+                {isDone ? <CheckCircle2 size={16} /> : isCurrent && isAuditing ? <Clock size={16} className="pulse-dot" /> : <Icon size={15} />}
               </div>
 
+              {/* Stage Title */}
+              <span
+                style={{
+                  fontSize: 11.5,
+                  fontWeight: isCurrent ? 800 : 700,
+                  color: isCurrent ? "var(--oxford-navy)" : isDone ? "var(--oxford-navy)" : "var(--text-muted)",
+                  lineHeight: 1.25,
+                }}
+              >
+                {stage.id}. {stage.label}
+              </span>
+
+              {/* Stage Subtitle */}
               <span
                 style={{
                   fontSize: 10,
                   color: "var(--text-muted)",
-                  lineHeight: 1.25,
-                  height: 26,
-                  overflow: "hidden",
+                  marginTop: 3,
+                  lineHeight: 1.2,
+                  display: "block",
                 }}
               >
-                {step.subtext}
+                {stage.description}
               </span>
-            </motion.div>
+            </div>
           );
         })}
       </div>

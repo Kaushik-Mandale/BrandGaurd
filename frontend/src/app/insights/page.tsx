@@ -228,50 +228,50 @@ export default function InsightsPage() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 16 }}>
                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="card" style={{ display: "flex", flexDirection: "column", gap: 10, borderTop: "3px solid var(--status-success-text)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--status-success-text)", textTransform: "uppercase" }}>AI Fix Acceptance Rate</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--status-success-text)", textTransform: "uppercase" }}>Reviewer Agreement Rate</span>
                     <span style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: "var(--status-success-bg)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--status-success-text)" }}><CheckCircle2 size={18} /></span>
                   </div>
                   <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                     <span style={{ fontSize: 32, fontWeight: 800, color: "var(--status-success-text)" }}>{pct(data.acceptance_rate)}</span>
-                    <span style={{ fontSize: 12, color: "var(--text-muted)" }}>fixes accepted</span>
+                    <span style={{ fontSize: 12, color: "var(--text-muted)" }}>corrections accepted</span>
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Reviewers agreed with AI proposals</div>
+                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Reviewers agreed with suggested brand fixes</div>
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card" style={{ display: "flex", flexDirection: "column", gap: 10, borderTop: "3px solid var(--cerulean)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--status-info-text)", textTransform: "uppercase" }}>Reviewer False Positive Rate</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--status-info-text)", textTransform: "uppercase" }}>Reviewer Dismissal Rate</span>
                     <span style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: "var(--status-info-bg)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--status-info-text)" }}><Target size={18} /></span>
                   </div>
                   <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                     <span style={{ fontSize: 32, fontWeight: 800, color: "var(--status-info-text)" }}>{pct(data.ai_findings?.false_positive_rate)}</span>
                     <span style={{ fontSize: 12, color: "var(--text-muted)" }}>dismissed</span>
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{data.ai_findings?.rejected_by_reviewers ?? 0} dismissed by human reviewers</div>
+                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{data.ai_findings?.rejected_by_reviewers ?? 0} dismissed by human reviewers as acceptable</div>
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="card" style={{ display: "flex", flexDirection: "column", gap: 10, borderTop: "3px solid var(--oxford-navy)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--oxford-navy)", textTransform: "uppercase" }}>Pipeline Hallucination Shield</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--oxford-navy)", textTransform: "uppercase" }}>Evidence Verifier Filter</span>
                     <span style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: "var(--navy-dim)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--oxford-navy)" }}><ShieldCheck size={18} /></span>
                   </div>
                   <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                     <span style={{ fontSize: 32, fontWeight: 800, color: "var(--oxford-navy)" }}>{data.ai_findings?.dropped_by_verifier ?? 0}</span>
-                    <span style={{ fontSize: 12, color: "var(--text-muted)" }}>findings pruned</span>
+                    <span style={{ fontSize: 12, color: "var(--text-muted)" }}>false positives pruned</span>
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Dropped by 2-stage evidence verifier</div>
+                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Pruned before reaching reviewer review queue</div>
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card" style={{ display: "flex", flexDirection: "column", gap: 10, borderTop: "3px solid var(--punch-red)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--punch-red)", textTransform: "uppercase" }}>Ambiguous Rule Drift</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--punch-red)", textTransform: "uppercase" }}>Rules Needing Clarification</span>
                     <span style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: "var(--punch-dim)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--punch-red)" }}><AlertTriangle size={18} /></span>
                   </div>
                   <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                     <span style={{ fontSize: 32, fontWeight: 800, color: "var(--punch-red)" }}>{data.ambiguous_rules?.length ?? 0}</span>
                     <span style={{ fontSize: 12, color: "var(--text-muted)" }}>rules flagged</span>
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Frequently disputed or rejected by reviewers</div>
+                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Guidelines frequently disputed or overridden by reviewers</div>
                 </motion.div>
               </div>
 

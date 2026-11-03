@@ -21,6 +21,9 @@ import {
   RotateCw,
   CheckCircle2,
   AlertTriangle,
+  AlertCircle,
+  Info,
+  ShieldCheck,
   FileText,
   Sparkles,
   BookOpen,
@@ -273,7 +276,12 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   const acceptedCount = findings.filter((f) => f.status === "accepted").length;
   const rejectedCount = findings.filter((f) => f.status === "rejected").length;
   const highSevOpen = findings.filter((f) => f.severity === "high" && f.status === "open").length;
+  const medSevOpen = findings.filter((f) => f.severity === "medium" && f.status === "open").length;
+  const lowSevOpen = findings.filter((f) => f.severity === "low" && f.status === "open").length;
+  const verifiedClaimsCount = findings.filter((f) => f.type === "claim" && (f.verified || f.message.includes("[SUPPORTED]"))).length;
+  const attentionClaimsCount = findings.filter((f) => f.type === "claim" && (f.message.includes("[CONTRADICTED]") || f.message.includes("[UNSUPPORTED]"))).length;
   const reviewPending = sub.status === "pending" || sub.status === "processing";
+  const isReadyForApproval = openCount === 0 && sub.status !== "approved";
 
   const filteredFindings = findings.filter((f) => {
     const sevMatch = filterSeverity === "all" || f.severity === filterSeverity;
@@ -374,22 +382,23 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
           alignItems: "center",
           flexWrap: "wrap",
           gap: 16,
-          padding: "18px 24px",
+          padding: "20px 24px",
+          borderTop: openCount > 0 ? "4px solid var(--punch-red)" : "4px solid #38A169",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <Link
             href="/"
             className="btn btn-secondary"
-            style={{ padding: "6px 12px", fontSize: 13 }}
+            style={{ padding: "7px 12px", fontSize: 13 }}
           >
             <ArrowLeft size={14} />
             <span>Dashboard</span>
           </Link>
-          <div style={{ height: 24, width: 1, backgroundColor: "var(--border)" }} />
+          <div style={{ height: 28, width: 1, backgroundColor: "var(--border)" }} />
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <h1 style={{ fontSize: 18, fontWeight: 800, color: "var(--inkloom-navy)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <h1 style={{ fontSize: 20, fontWeight: 800, color: "var(--oxford-navy)" }}>
                 {sub.title || `Submission #${sub.id}`}
               </h1>
               <SubmissionStatusBadge value={sub.status} />
@@ -397,39 +406,46 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
                 style={{
                   fontSize: 11,
                   fontWeight: 700,
-                  color: "var(--inkloom-navy)",
+                  color: "var(--oxford-navy)",
                   backgroundColor: "var(--bg-subtle)",
                   border: "1px solid var(--border)",
-                  padding: "2px 6px",
+                  padding: "2px 7px",
                   borderRadius: 4,
                 }}
               >
                 v{sub.version || 1}
               </span>
             </div>
+
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
               <span style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                ID #{sub.id} • Audited on {fmtDate(sub.created_at)}
+                Audit ID #{sub.id} · Created on {fmtDate(sub.created_at)}
               </span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "var(--punch-red)", backgroundColor: "var(--punch-dim)", padding: "1px 6px", borderRadius: 4 }}>
-                {openCount} open
+              <span style={{ color: "var(--text-muted)" }}>•</span>
+              <span
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: sub.status === "approved"
+                    ? "var(--status-success-text)"
+                    : openCount === 0
+                    ? "var(--status-success-text)"
+                    : highSevOpen > 0
+                    ? "var(--punch-red)"
+                    : "var(--text-secondary)",
+                }}
+              >
+                {sub.status === "approved"
+                  ? "Audit Outcome: Content Approved & Cleared for Release"
+                  : isReadyForApproval
+                  ? `Audit Outcome: Ready for Final Approval (${acceptedCount} fixes applied, ${rejectedCount} dismissed)`
+                  : `Audit Outcome: Action Required (${openCount} unresolved: ${highSevOpen} critical, ${medSevOpen} major, ${lowSevOpen} minor)`}
               </span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "var(--status-success-text)", backgroundColor: "var(--status-success-bg)", padding: "1px 6px", borderRadius: 4 }}>
-                {acceptedCount} applied
-              </span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", backgroundColor: "var(--bg-subtle)", padding: "1px 6px", borderRadius: 4 }}>
-                {rejectedCount} dismissed
-              </span>
-              {highSevOpen > 0 && (
-                <span style={{ fontSize: 11, fontWeight: 700, color: "var(--punch-red)", border: "1px solid var(--punch-border)", padding: "1px 6px", borderRadius: 4 }}>
-                  {highSevOpen} high-severity
-                </span>
-              )}
             </div>
           </div>
         </div>
 
-        {/* Action Controls */}
+        {/* Action Controls & Primary Next Action */}
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <button
             onClick={handleRerun}
@@ -437,7 +453,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
             className="btn btn-secondary"
             title="Re-run pipeline against current guidelines"
           >
-            <RotateCw size={14} />
+            <RotateCw size={14} className={actionLoading === "rerun" ? "animate-spin" : ""} />
             <span>Re-Audit</span>
           </button>
 
@@ -448,21 +464,149 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
             style={{ color: "var(--status-warning-text)" }}
           >
             <AlertTriangle size={14} />
-            <span>Request Revisions</span>
+            <span>Request Changes</span>
           </button>
 
           <button
             onClick={() => handleApprove(false)}
             disabled={!!actionLoading || sub.status === "approved" || reviewPending}
-            className="btn btn-success"
+            className="btn btn-primary"
+            style={{
+              backgroundColor: sub.status === "approved" ? "#276749" : isReadyForApproval ? "#38A169" : "var(--cerulean)",
+              borderColor: "transparent",
+            }}
           >
             <CheckCircle2 size={15} />
-            <span>{sub.status === "approved" ? "Approved" : "Approve Content"}</span>
+            <span>{sub.status === "approved" ? "Approved" : isReadyForApproval ? "Approve Content" : "Approve Content"}</span>
           </button>
         </div>
       </motion.div>
 
-      {/* 9-Stage Animated Pipeline Stepper */}
+      {/* ── Summary Bar: Critical, Major, Minor, Claims (Section 5 Requirement) ── */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+          gap: 12,
+        }}
+      >
+        <div
+          style={{
+            backgroundColor: "#FFFFFF",
+            padding: "12px 16px",
+            borderRadius: 10,
+            border: "1px solid var(--border)",
+            borderLeft: "3.5px solid var(--punch-red)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>
+              Critical Issues
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "var(--punch-red)", marginTop: 2 }}>
+              {findings.filter((f) => f.severity === "high").length}
+            </div>
+          </div>
+          <AlertTriangle size={18} color="var(--punch-red)" />
+        </div>
+
+        <div
+          style={{
+            backgroundColor: "#FFFFFF",
+            padding: "12px 16px",
+            borderRadius: 10,
+            border: "1px solid var(--border)",
+            borderLeft: "3.5px solid #D69E2E",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>
+              Major Issues
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#D69E2E", marginTop: 2 }}>
+              {findings.filter((f) => f.severity === "medium").length}
+            </div>
+          </div>
+          <AlertCircle size={18} color="#D69E2E" />
+        </div>
+
+        <div
+          style={{
+            backgroundColor: "#FFFFFF",
+            padding: "12px 16px",
+            borderRadius: 10,
+            border: "1px solid var(--border)",
+            borderLeft: "3.5px solid var(--frosted-blue)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>
+              Minor Issues
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "var(--cerulean)", marginTop: 2 }}>
+              {findings.filter((f) => f.severity === "low").length}
+            </div>
+          </div>
+          <Info size={18} color="var(--cerulean)" />
+        </div>
+
+        <div
+          style={{
+            backgroundColor: "#FFFFFF",
+            padding: "12px 16px",
+            borderRadius: 10,
+            border: "1px solid var(--border)",
+            borderLeft: "3.5px solid #38A169",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>
+              Verified Claims
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#276749", marginTop: 2 }}>
+              {verifiedClaimsCount}
+            </div>
+          </div>
+          <ShieldCheck size={18} color="#38A169" />
+        </div>
+
+        <div
+          style={{
+            backgroundColor: "#FFFFFF",
+            padding: "12px 16px",
+            borderRadius: 10,
+            border: "1px solid var(--border)",
+            borderLeft: "3.5px solid #E63946",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>
+              Claims Needing Attention
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "var(--punch-red)", marginTop: 2 }}>
+              {attentionClaimsCount}
+            </div>
+          </div>
+          <AlertTriangle size={18} color="var(--punch-red)" />
+        </div>
+      </div>
+
+      {/* 6-Stage Animated Pipeline Stepper */}
       <PipelineProgress
         status={sub.status}
         findingsCount={findings.length}

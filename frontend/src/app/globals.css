@@ -818,3 +818,15 @@ textarea:focus {
     width: 100% !important;
   }
 }
+
+@media (max-width: 768px) {
+  .pipeline-stages-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
+  }
+}
+@media (max-width: 480px) {
+  .pipeline-stages-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

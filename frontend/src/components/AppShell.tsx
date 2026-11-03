@@ -305,7 +305,7 @@ export default function AppShell({ children }: AppShellProps) {
             }}
           >
             <PlusCircle size={17} color={pathname.startsWith("/submit") ? "#A8DADC" : "#7E9AB8"} />
-            <span>New Audit</span>
+            <span>New Brand Check</span>
           </Link>
 
           <Link
@@ -326,7 +326,7 @@ export default function AppShell({ children }: AppShellProps) {
             }}
           >
             <FileText size={17} color="#7E9AB8" />
-            <span>Submissions</span>
+            <span>Audit Submissions</span>
           </Link>
 
           <Link
@@ -347,7 +347,7 @@ export default function AppShell({ children }: AppShellProps) {
             }}
           >
             <ShieldCheck size={17} color={pathname.startsWith("/review") ? "#A8DADC" : "#7E9AB8"} />
-            <span>Review & Approvals</span>
+            <span>Review Queue</span>
           </Link>
 
           {/* Group 2: Guidelines & Identity */}

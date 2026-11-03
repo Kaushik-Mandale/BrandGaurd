@@ -10,10 +10,11 @@ import {
   ArrowLeft,
   FileText,
   UploadCloud,
-  Sparkles,
-  CheckCircle2,
   AlertTriangle,
-  Shield,
+  ShieldCheck,
+  X,
+  FileCheck,
+  HelpCircle,
 } from "lucide-react";
 
 export default function SubmitPage() {
@@ -21,33 +22,60 @@ export default function SubmitPage() {
   const [tab, setTab] = useState<"text" | "file">("text");
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
+  const [contextNote, setContextNote] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [auditStage, setAuditStage] = useState<string>("Analyzing content against brand rules...");
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+
+  // Sample copy snippets for quick evaluator testing
+  const sampleSnippets = [
+    {
+      label: "Campaign Copy with Claims",
+      title: "HydraPlus Product Launch Copy",
+      text: "Experience HydraPlus! It is clinically proven to eliminate 100% of fine lines and wrinkles in just 24 hours. Our revolutionary patented blend hydrates 10x deeper than leading luxury creams without irritation. Don't miss out on the world's #1 breakthrough skincare formula.",
+    },
+    {
+      label: "Clean Compliant Copy",
+      title: "Product Launch Press Release — Verified Baseline",
+      text: "Acme Corporation today introduced its next-generation brand asset library, delivering streamlined workflows for distributed creative teams. The new release integrates with established enterprise content pipelines to maintain brand consistency across regional marketing channels.",
+    },
+  ];
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
     if (tab === "text" && !text.trim()) {
-      setError("Please provide the content you want to review.");
+      setError("Please provide the marketing copy you want to evaluate.");
       return;
     }
     if (tab === "file" && !file) {
-      setError("Please select a document or creative asset to upload.");
+      setError("Please select a document (PDF, DOCX) or visual creative (PNG, JPG) to upload.");
       return;
     }
 
     setLoading(true);
+    setAuditStage("1. Ingesting content and extracting text...");
 
     try {
+      setTimeout(() => setAuditStage("2. Checking terminology and brand rules..."), 600);
+      setTimeout(() => setAuditStage("3. Verifying claims against approved evidence..."), 1200);
+      setTimeout(() => setAuditStage("4. Inspecting visual elements, logos and contrast..."), 1800);
+
       let res: { id: number; status: string };
+      const fullText = contextNote.trim()
+        ? `[Context: ${contextNote.trim()}]\n\n${text}`
+        : text;
+
       if (tab === "text") {
-        res = await api.createSubmission(title.trim() || "Compliance Audit", text);
+        res = await api.createSubmission(title.trim() || "Marketing Copy Brand Check", fullText);
       } else {
         res = await api.uploadSubmission(file!, title.trim() || file!.name);
       }
+
+      setAuditStage("Audit complete! Opening review workspace...");
       router.push(`/review/${res.id}`);
     } catch (err) {
       setError(errMsg(err));
@@ -59,13 +87,19 @@ export default function SubmitPage() {
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      setFile(e.dataTransfer.files[0]);
-      setTab("file");
+      const droppedFile = e.dataTransfer.files[0];
+      const ext = droppedFile.name.substring(droppedFile.name.lastIndexOf(".")).toLowerCase();
+      if ([".pdf", ".docx", ".png", ".jpg", ".jpeg"].includes(ext)) {
+        setFile(droppedFile);
+        if (!title) setTitle(droppedFile.name.replace(/\.[^/.]+$/, ""));
+      } else {
+        setError(`Unsupported file type: ${ext}. Please upload a PDF, DOCX, PNG, or JPG file.`);
+      }
     }
   }
 
   return (
-    <div style={{ maxWidth: 960, margin: "0 auto", display: "flex", flexDirection: "column", gap: 28 }}>
+    <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Breadcrumb Navigation */}
       <motion.div
         initial={{ opacity: 0, x: -6 }}
@@ -86,10 +120,10 @@ export default function SubmitPage() {
           <span>Dashboard</span>
         </Link>
         <span style={{ color: "var(--text-muted)" }}>/</span>
-        <span style={{ color: "var(--oxford-navy)", fontWeight: 700 }}>New Audit Engine</span>
+        <span style={{ color: "var(--oxford-navy)", fontWeight: 700 }}>New Brand Check</span>
       </motion.div>
 
-      {/* Header Banner */}
+      {/* Header Banner with Clear Operational Purpose */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -99,15 +133,76 @@ export default function SubmitPage() {
           paddingLeft: 18,
         }}
       >
-        <h1 style={{ fontSize: 28, fontWeight: 800, color: "var(--oxford-navy)", letterSpacing: "-0.035em" }}>
-          Submit Content for Governance Audit
+        <h1 style={{ fontSize: 26, fontWeight: 800, color: "var(--oxford-navy)", letterSpacing: "-0.03em" }}>
+          Start a Brand Governance Check
         </h1>
-        <p style={{ color: "var(--text-secondary)", marginTop: 6, fontSize: 14.5 }}>
-          Review your content against the brand rules and approved evidence configured in your workspace.
+        <p style={{ color: "var(--text-secondary)", marginTop: 6, fontSize: 14, lineHeight: 1.5 }}>
+          Your content will be checked against your approved brand guidelines and factual evidence. You will be able to review the findings and apply corrections before making a final sign-off decision.
         </p>
       </motion.div>
 
-      {/* Main Submission Form */}
+      {/* Submission Mode Selector */}
+      <div
+        style={{
+          display: "flex",
+          borderBottom: "2px solid var(--border)",
+          gap: 12,
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => {
+            setTab("text");
+            setError(null);
+          }}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "12px 18px",
+            border: "none",
+            borderBottom: tab === "text" ? "3px solid var(--cerulean)" : "3px solid transparent",
+            backgroundColor: "transparent",
+            cursor: "pointer",
+            fontSize: 14,
+            fontWeight: tab === "text" ? 800 : 600,
+            color: tab === "text" ? "var(--cerulean)" : "var(--text-secondary)",
+            marginBottom: -2,
+            transition: "all 0.15s ease",
+          }}
+        >
+          <FileText size={17} />
+          <span>Check Marketing Copy</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setTab("file");
+            setError(null);
+          }}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "12px 18px",
+            border: "none",
+            borderBottom: tab === "file" ? "3px solid var(--cerulean)" : "3px solid transparent",
+            backgroundColor: "transparent",
+            cursor: "pointer",
+            fontSize: 14,
+            fontWeight: tab === "file" ? 800 : 600,
+            color: tab === "file" ? "var(--cerulean)" : "var(--text-secondary)",
+            marginBottom: -2,
+            transition: "all 0.15s ease",
+          }}
+        >
+          <UploadCloud size={17} />
+          <span>Check a Document or Creative (PDF, DOCX, PNG, JPG)</span>
+        </button>
+      </div>
+
+      {/* Main Submission Form or Processing State */}
       <AnimatePresence mode="wait">
         {loading ? (
           <motion.div
@@ -125,13 +220,14 @@ export default function SubmitPage() {
               gap: 20,
               backgroundColor: "#FFFFFF",
               borderTop: "4px solid var(--cerulean)",
+              borderRadius: 16,
             }}
           >
             <div
               style={{
-                width: 64,
-                height: 64,
-                borderRadius: 16,
+                width: 68,
+                height: 68,
+                borderRadius: 18,
                 backgroundColor: "var(--cerulean-dim)",
                 border: "2px solid var(--frosted-border)",
                 display: "flex",
@@ -140,15 +236,18 @@ export default function SubmitPage() {
                 color: "var(--cerulean)",
               }}
             >
-              <Shield size={32} className="pulse-dot" />
+              <ShieldCheck size={36} className="pulse-dot" />
             </div>
 
             <div>
-              <h2 style={{ fontSize: 21, fontWeight: 800, color: "var(--oxford-navy)" }}>
-                Submitting content...
+              <h2 style={{ fontSize: 22, fontWeight: 800, color: "var(--oxford-navy)" }}>
+                Auditing Content in Real Time...
               </h2>
-              <p style={{ color: "var(--text-secondary)", fontSize: 14, marginTop: 6 }}>
-                Your review will open when the submission is ready.
+              <p style={{ color: "var(--cerulean)", fontSize: 14.5, fontWeight: 700, marginTop: 8 }}>
+                {auditStage}
+              </p>
+              <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 4 }}>
+                Review workspace will open automatically when verification completes.
               </p>
             </div>
           </motion.div>
@@ -159,60 +258,22 @@ export default function SubmitPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             onSubmit={handleSubmit}
-            className="card border-accent-cerulean"
-            style={{ display: "flex", flexDirection: "column", gap: 22 }}
+            className="card"
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 20,
+              backgroundColor: "#FFFFFF",
+              borderRadius: 16,
+              padding: "28px 30px",
+              border: "1px solid var(--border)",
+            }}
           >
-            {/* Tab Selection */}
-            <div style={{ display: "flex", borderBottom: "1px solid var(--border)", paddingBottom: 14, gap: 10 }}>
-              <button
-                type="button"
-                onClick={() => setTab("text")}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "10px 18px",
-                  borderRadius: "var(--radius-sm)",
-                  border: "1px solid transparent",
-                  cursor: "pointer",
-                  fontSize: 13,
-                  fontWeight: 700,
-                  backgroundColor: tab === "text" ? "var(--cerulean)" : "var(--honeydew)",
-                  color: tab === "text" ? "#FFFFFF" : "var(--text-secondary)",
-                  transition: "all var(--transition-fast)",
-                }}
-              >
-                <FileText size={16} />
-                <span>Marketing Copy Audit</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setTab("file")}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "10px 18px",
-                  borderRadius: "var(--radius-sm)",
-                  border: "1px solid transparent",
-                  cursor: "pointer",
-                  fontSize: 13,
-                  fontWeight: 700,
-                  backgroundColor: tab === "file" ? "var(--cerulean)" : "var(--honeydew)",
-                  color: tab === "file" ? "#FFFFFF" : "var(--text-secondary)",
-                  transition: "all var(--transition-fast)",
-                }}
-              >
-                <UploadCloud size={16} />
-                <span>Document & Creative Upload (PDF, DOCX, PNG, JPG)</span>
-              </button>
-            </div>
-
             {error && (
               <div
                 style={{
-                  padding: "14px 18px",
-                  borderRadius: "var(--radius-sm)",
+                  padding: "12px 16px",
+                  borderRadius: 8,
                   backgroundColor: "var(--status-danger-bg)",
                   border: "1px solid var(--punch-border)",
                   color: "var(--status-danger-text)",
@@ -227,98 +288,263 @@ export default function SubmitPage() {
               </div>
             )}
 
-            {/* Campaign / Creative Title */}
+            {/* Campaign / Asset Name */}
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <label style={{ fontSize: 13, fontWeight: 700, color: "var(--oxford-navy)" }}>
-                Campaign or Asset Title
+                Campaign or Asset Name *
               </label>
               <input
                 type="text"
                 placeholder="e.g. Q4 Global Brand Campaign Copy"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                style={{
+                  padding: "10px 14px",
+                  fontSize: 13.5,
+                  borderRadius: 8,
+                  border: "1px solid var(--border)",
+                }}
               />
             </div>
 
+            {/* Mode 1: Check Marketing Copy */}
             {tab === "text" ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 13, fontWeight: 700, color: "var(--oxford-navy)" }}>
-                  Marketing Content to Audit *
-                </label>
-                <textarea
-                  rows={9}
-                  placeholder="Paste marketing copy, promotional claims, press releases, or ad copy..."
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  style={{
-                    lineHeight: 1.6,
-                    resize: "vertical",
-                  }}
-                />
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--text-muted)" }}>
-                  <span>{text.length} characters</span>
-                  <span>Evaluates banned terms, unsubstantiated claims, and required disclaimers</span>
+              <>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: "var(--oxford-navy)" }}>
+                      Marketing Content *
+                    </label>
+
+                    {/* Quick Evaluator Sample Presets */}
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {sampleSnippets.map((s) => (
+                        <button
+                          key={s.label}
+                          type="button"
+                          onClick={() => {
+                            setTitle(s.title);
+                            setText(s.text);
+                          }}
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            padding: "3px 8px",
+                            borderRadius: 4,
+                            border: "1px solid var(--border)",
+                            backgroundColor: "var(--honeydew)",
+                            color: "var(--cerulean)",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Use {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <textarea
+                    rows={8}
+                    placeholder="Paste your marketing copy, promotional claims, press release, social caption, or advertising text here..."
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    style={{
+                      padding: "12px 14px",
+                      fontSize: 13.5,
+                      borderRadius: 8,
+                      border: "1px solid var(--border)",
+                      lineHeight: 1.6,
+                      fontFamily: "inherit",
+                    }}
+                  />
                 </div>
-              </div>
+
+                {/* Optional Campaign Context */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <label style={{ fontSize: 13, fontWeight: 700, color: "var(--oxford-navy)", display: "flex", alignItems: "center", gap: 5 }}>
+                    <span>Optional Context</span>
+                    <span style={{ fontSize: 11, fontWeight: 500, color: "var(--text-muted)" }}>
+                      (e.g. Target audience, channel: Instagram, Email, Billboard)
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Social media paid advertisement targeting US consumers"
+                    value={contextNote}
+                    onChange={(e) => setContextNote(e.target.value)}
+                    style={{
+                      padding: "9px 12px",
+                      fontSize: 13,
+                      borderRadius: 8,
+                      border: "1px solid var(--border)",
+                    }}
+                  />
+                </div>
+              </>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              /* Mode 2: Check a Document or Creative */
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <label style={{ fontSize: 13, fontWeight: 700, color: "var(--oxford-navy)" }}>
-                  Upload Document or Creative *
+                  Upload Document or Visual Asset *
                 </label>
+
+                {/* Dropzone */}
                 <div
-                  onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragging(true);
+                  }}
                   onDragLeave={() => setIsDragging(false)}
                   onDrop={handleDrop}
                   style={{
-                    border: `2px dashed ${isDragging ? "var(--cerulean)" : "var(--border)"}`,
-                    borderRadius: "var(--radius-md)",
-                    padding: "48px 24px",
+                    border: isDragging ? "2px dashed var(--cerulean)" : "2px dashed var(--border)",
+                    borderRadius: 12,
+                    padding: "36px 20px",
                     textAlign: "center",
-                    backgroundColor: isDragging ? "var(--cerulean-dim)" : "var(--honeydew)",
-                    cursor: "pointer",
-                    transition: "all var(--transition-fast)",
+                    backgroundColor: isDragging ? "var(--frosted-dim)" : "var(--honeydew)",
+                    transition: "all 0.15s ease",
                   }}
-                  onClick={() => document.getElementById("file-upload-input")?.click()}
                 >
-                  <div style={{ width: 52, height: 52, borderRadius: 14, backgroundColor: "var(--cerulean-dim)", border: "1px solid var(--frosted-border)", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "var(--cerulean)", marginBottom: 14 }}>
-                    <UploadCloud size={26} />
-                  </div>
-                  <p style={{ fontWeight: 700, color: "var(--oxford-navy)", fontSize: 15, marginBottom: 4 }}>
-                    {file ? file.name : "Click to select or drag and drop a file"}
-                  </p>
-                  <p style={{ fontSize: 12.5, color: "var(--text-muted)" }}>
-                    Supported: PDF, DOCX, TXT, MD, PNG, JPG (Includes OCR text extraction & OpenCV vision checks)
-                  </p>
-                  <input
-                    id="file-upload-input"
-                    type="file"
-                    style={{ display: "none" }}
-                    onChange={(e) => setFile(e.target.files?.[0] || null)}
-                    accept=".txt,.md,.pdf,.docx,.png,.jpg,.jpeg"
-                  />
+                  {file ? (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+                      <div
+                        style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: 10,
+                          backgroundColor: "var(--cerulean-dim)",
+                          color: "var(--cerulean)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <FileCheck size={26} />
+                      </div>
+
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: "var(--oxford-navy)" }}>
+                          {file.name}
+                        </div>
+                        <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
+                          Type: {file.type || "Document/Image"} · Size: {(file.size / 1024).toFixed(1)} KB
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setFile(null)}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                          fontSize: 12,
+                          color: "var(--punch-red)",
+                          backgroundColor: "transparent",
+                          border: "none",
+                          cursor: "pointer",
+                          fontWeight: 700,
+                          marginTop: 4,
+                        }}
+                      >
+                        <X size={13} />
+                        <span>Remove file</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+                      <div
+                        style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: 10,
+                          backgroundColor: "var(--cerulean-dim)",
+                          color: "var(--cerulean)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <UploadCloud size={24} />
+                      </div>
+
+                      <div>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: "var(--oxford-navy)" }}>
+                          Drag and drop your file here, or{" "}
+                        </span>
+                        <label
+                          htmlFor="file-upload"
+                          style={{
+                            color: "var(--cerulean)",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            textDecoration: "underline",
+                            fontSize: 14,
+                          }}
+                        >
+                          browse files
+                        </label>
+                      </div>
+
+                      <input
+                        id="file-upload"
+                        type="file"
+                        accept=".pdf,.docx,.png,.jpg,.jpeg"
+                        style={{ display: "none" }}
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            const f = e.target.files[0];
+                            setFile(f);
+                            if (!title) setTitle(f.name.replace(/\.[^/.]+$/, ""));
+                          }
+                        }}
+                      />
+
+                      <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
+                        Accepted formats: <strong>PDF, DOCX, PNG, JPG</strong> (up to 15 MB)
+                      </div>
+                    </div>
+                  )}
                 </div>
-                {file && (
-                  <div style={{ fontSize: 12.5, color: "var(--status-success-text)", display: "flex", alignItems: "center", gap: 6 }}>
-                    <CheckCircle2 size={14} />
-                    <span>Selected: {file.name} ({(file.size / 1024).toFixed(1)} KB)</span>
-                  </div>
-                )}
               </div>
             )}
 
-            {/* Actions */}
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 8 }}>
-              <Link href="/" className="btn btn-secondary">
+            {/* Explanation of What Happens After Taking Action */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 10,
+                backgroundColor: "var(--bg-main)",
+                padding: "12px 14px",
+                borderRadius: 8,
+                border: "1px solid var(--border)",
+                fontSize: 12.5,
+                color: "var(--text-secondary)",
+              }}
+            >
+              <HelpCircle size={17} color="var(--cerulean)" style={{ flexShrink: 0, marginTop: 1 }} />
+              <div>
+                <strong>What happens after clicking Start Brand Check?</strong>
+                <p style={{ marginTop: 2, lineHeight: 1.45 }}>
+                  The engine extracts text and visual elements, verifies terminology against active brand rules, checks factual claims against approved documents in the knowledge base, and checks contrast and logo guidelines. You can inspect every finding and decide whether to accept, fix, or dismiss it.
+                </p>
+              </div>
+            </div>
+
+            {/* Primary Action Button */}
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginTop: 6 }}>
+              <Link href="/" className="btn btn-secondary" style={{ padding: "10px 18px" }}>
                 Cancel
               </Link>
+
               <button
                 type="submit"
-                disabled={loading}
                 className="btn btn-primary"
-                style={{ minWidth: 180 }}
+                style={{ padding: "10px 24px", fontSize: 14 }}
               >
-                <Sparkles size={15} />
-                <span>Start Compliance Audit</span>
+                <ShieldCheck size={16} />
+                <span>Start Brand Check</span>
               </button>
             </div>
           </motion.form>
